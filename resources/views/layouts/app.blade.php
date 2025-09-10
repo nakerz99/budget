@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Budget Tracker') }} - @yield('title', 'Personal Finance Management')</title>
+    <title>{{ config('app.name', 'NR Budget Tracker') }} - @yield('title', 'Personal Finance Management')</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -223,7 +223,7 @@
             <div class="header-content">
                 <div class="logo">
                     <a href="{{ route('landing') }}" style="text-decoration: none; color: inherit;">
-                        Budget Tracker
+                        NR Budget Tracker
                     </a>
                 </div>
                 <nav class="nav">
