@@ -358,9 +358,17 @@
                                         <div class="text-xs font-semibold text-gray-800">
                                             {{ currency_symbol() }}{{ number_format($account->balance, 0) }}
                                         </div>
+                                        <div class="text-xs {{ $account->is_active ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ $account->is_active ? 'Active' : 'Inactive' }}
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="flex gap-1">
+                                    <button onclick="toggleAccountStatus({{ $account->id }}, {{ $account->is_active ? 'false' : 'true' }})" 
+                                            class="text-{{ $account->is_active ? 'yellow' : 'green' }}-600 hover:text-{{ $account->is_active ? 'yellow' : 'green' }}-800 p-1" 
+                                            title="{{ $account->is_active ? 'Deactivate' : 'Activate' }}">
+                                        <i class="fas fa-{{ $account->is_active ? 'pause' : 'play' }} text-xs"></i>
+                                    </button>
                                     <button onclick="editAccount({{ $account->id }})" class="text-blue-600 hover:text-blue-800 p-1" title="Edit">
                                         <i class="fas fa-edit text-xs"></i>
                                     </button>
@@ -677,6 +685,14 @@
                     <input type="number" name="balance" id="editAccountBalance" class="form-control" step="0.01" required>
                 </div>
                 
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="is_active" id="editAccountActive" value="1" class="mr-2">
+                        Active Account
+                    </label>
+                    <small class="text-gray-500 text-xs">Inactive accounts won't appear in dropdowns and transactions</small>
+                </div>
+                
                 <div class="flex gap-3 mt-6">
                     <button type="button" onclick="hideEditAccountModal()" class="btn btn-secondary flex-1">
                         Cancel
@@ -868,6 +884,7 @@ function editAccount(id) {
             document.getElementById('editAccountName').value = data.name;
             document.getElementById('editAccountType').value = data.type;
             document.getElementById('editAccountBalance').value = data.balance;
+            document.getElementById('editAccountActive').checked = data.is_active;
             document.getElementById('editAccountForm').action = `/accounts/${id}`;
             showEditAccountModal();
         })
@@ -875,6 +892,34 @@ function editAccount(id) {
             console.error('Error:', error);
             alert('Error loading account data');
         });
+}
+
+function toggleAccountStatus(accountId, newStatus) {
+    fetch(`/accounts/${accountId}/toggle-status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            is_active: newStatus === 'true'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            // Reload the page to show updated status
+            window.location.reload();
+        } else {
+            alert('Error: ' + (data.message || 'Failed to update account status'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating account status');
+    });
 }
 
 function confirmDeleteAllData() {

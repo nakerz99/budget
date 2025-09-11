@@ -96,6 +96,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/accounts', [SettingsController::class, 'storeAccount'])->name('accounts.store');
     Route::get('/accounts/{account}/edit', [SettingsController::class, 'editAccount'])->name('accounts.edit');
     Route::put('/accounts/{account}', [SettingsController::class, 'updateAccount'])->name('accounts.update');
+    Route::post('/accounts/{account}/toggle-status', [SettingsController::class, 'toggleAccountStatus'])->name('accounts.toggleStatus');
     Route::delete('/accounts/{account}', [SettingsController::class, 'destroyAccount'])->name('accounts.destroy');
     
     // Admin Routes

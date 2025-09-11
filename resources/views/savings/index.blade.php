@@ -256,6 +256,55 @@
     </div>
     @endif
 
+    <!-- All Accounts Section -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-wallet"></i> All Accounts
+            <span class="text-sm text-gray-500 ml-2">(Manage all your accounts)</span>
+        </div>
+        <div class="card-body p-3 lg:p-4">
+            @if($allAccounts->count() > 0)
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    @foreach($allAccounts as $account)
+                    <div class="p-3 bg-gray-50 rounded-lg border border-gray-200 {{ !$account->is_active ? 'opacity-60' : '' }}">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm {{ $account->is_active ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400' }}">
+                                    <i class="fas fa-{{ $account->type === 'checking' ? 'university' : ($account->type === 'savings' ? 'piggy-bank' : ($account->type === 'cash' ? 'money-bill' : ($account->type === 'wallet' ? 'wallet' : 'credit-card'))) }}"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-medium text-gray-800 text-sm truncate">{{ $account->name }}</div>
+                                    <div class="text-xs text-gray-500 capitalize">{{ $account->type }}</div>
+                                    <div class="text-xs font-semibold text-gray-800">
+                                        {{ currency_symbol() }}{{ number_format($account->balance, 0) }}
+                                    </div>
+                                    <div class="text-xs {{ $account->is_active ? 'text-green-600' : 'text-red-600' }}">
+                                        {{ $account->is_active ? 'Active' : 'Inactive' }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex gap-1">
+                                <a href="{{ route('settings.index') }}#accounts" class="text-blue-600 hover:text-blue-800 p-1" title="Manage in Settings">
+                                    <i class="fas fa-cog text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="text-center py-6">
+                    <div class="text-2xl mb-2">💳</div>
+                    <p class="text-gray-500 text-sm">No accounts found</p>
+                    <a href="{{ route('settings.index') }}#accounts" class="btn btn-primary btn-sm mt-2">
+                        <i class="fas fa-plus"></i>
+                        Add Account
+                    </a>
+                </div>
+            @endif
+        </div>
+    </div>
+
     <!-- Savings Accounts -->
     <div class="card">
         <div class="card-header">

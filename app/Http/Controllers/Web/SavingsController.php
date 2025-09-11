@@ -41,11 +41,15 @@ class SavingsController extends Controller
                 : 0;
         }
         
-        // Get savings accounts (accounts with type 'savings')
-        $savingsAccounts = Account::where('user_id', $user->id)
-            ->where('type', 'savings')
-            ->where('is_active', true)
+        // Get all accounts with their status
+        $allAccounts = Account::where('user_id', $user->id)
+            ->orderBy('is_active', 'desc')
+            ->orderBy('type')
+            ->orderBy('name')
             ->get();
+        
+        // Get savings accounts (accounts with type 'savings')
+        $savingsAccounts = $allAccounts->where('type', 'savings');
         
         // Calculate total savings and statistics
         $totalSavings = $savingsAccounts->sum('balance');

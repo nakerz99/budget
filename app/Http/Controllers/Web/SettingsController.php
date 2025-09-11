@@ -318,6 +318,7 @@ class SettingsController extends Controller
             'name' => $account->name,
             'type' => $account->type,
             'balance' => $account->balance,
+            'is_active' => $account->is_active,
         ]);
     }
     
@@ -337,14 +338,16 @@ class SettingsController extends Controller
         
         $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:checking,savings,credit',
+            'type' => 'required|in:checking,savings,cash,wallet,credit',
             'balance' => 'required|numeric|min:0',
+            'is_active' => 'boolean',
         ]);
         
         $account->update([
             'name' => $request->name,
             'type' => $request->type,
             'balance' => $request->balance,
+            'is_active' => $request->has('is_active') ? (bool)$request->is_active : $account->is_active,
         ]);
         
         if ($request->expectsJson()) {
@@ -357,6 +360,37 @@ class SettingsController extends Controller
         
         return redirect()->route('settings.index')
             ->with('success', 'Account updated successfully');
+    }
+    
+    /**
+     * Toggle account active status.
+     *
+     * @param Request $request
+     * @param \App\Models\Account $account
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function toggleAccountStatus(Request $request, \App\Models\Account $account)
+    {
+        // Verify account belongs to user
+        if ($account->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        $request->validate([
+            'is_active' => 'required|boolean',
+        ]);
+        
+        $account->update([
+            'is_active' => $request->is_active,
+        ]);
+        
+        $status = $account->is_active ? 'activated' : 'deactivated';
+        
+        return response()->json([
+            'success' => true,
+            'message' => "Account {$status} successfully",
+            'is_active' => $account->is_active,
+        ]);
     }
     
     /**
