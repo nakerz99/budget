@@ -55,27 +55,27 @@
     <!-- Mobile Navigation Tabs -->
     <div class="lg:hidden mb-4">
         <div class="flex overflow-x-auto space-x-1 bg-gray-100 p-1 rounded-lg">
-            <button class="settings-tab-btn active" data-tab="profile">
+            <button class="settings-tab-btn active" data-tab="profile" title="Profile Settings">
                 <i class="fas fa-user text-xs"></i>
                 <span class="text-xs">Profile</span>
             </button>
-            <button class="settings-tab-btn" data-tab="security">
+            <button class="settings-tab-btn" data-tab="security" title="Security & PIN">
                 <i class="fas fa-lock text-xs"></i>
                 <span class="text-xs">Security</span>
             </button>
-            <button class="settings-tab-btn" data-tab="categories">
+            <button class="settings-tab-btn" data-tab="categories" title="Manage Categories">
                 <i class="fas fa-tags text-xs"></i>
                 <span class="text-xs">Categories</span>
             </button>
-            <button class="settings-tab-btn" data-tab="accounts">
+            <button class="settings-tab-btn" data-tab="accounts" title="Manage Accounts">
                 <i class="fas fa-wallet text-xs"></i>
                 <span class="text-xs">Accounts</span>
             </button>
-            <button class="settings-tab-btn" data-tab="preferences">
+            <button class="settings-tab-btn" data-tab="preferences" title="App Preferences">
                 <i class="fas fa-sliders-h text-xs"></i>
                 <span class="text-xs">Prefs</span>
             </button>
-            <button class="settings-tab-btn" data-tab="data">
+            <button class="settings-tab-btn" data-tab="data" title="Data Management">
                 <i class="fas fa-database text-xs"></i>
                 <span class="text-xs">Data</span>
             </button>
@@ -85,27 +85,27 @@
     <!-- Desktop Navigation -->
     <div class="hidden lg:block mb-6">
         <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-            <button class="settings-tab-btn active" data-tab="profile">
+            <button class="settings-tab-btn active" data-tab="profile" title="Profile Settings">
                 <i class="fas fa-user"></i>
                 <span>Profile</span>
             </button>
-            <button class="settings-tab-btn" data-tab="security">
+            <button class="settings-tab-btn" data-tab="security" title="Security & PIN">
                 <i class="fas fa-lock"></i>
                 <span>Security</span>
             </button>
-            <button class="settings-tab-btn" data-tab="categories">
+            <button class="settings-tab-btn" data-tab="categories" title="Manage Categories">
                 <i class="fas fa-tags"></i>
                 <span>Categories</span>
             </button>
-            <button class="settings-tab-btn" data-tab="accounts">
+            <button class="settings-tab-btn" data-tab="accounts" title="Manage Accounts">
                 <i class="fas fa-wallet"></i>
                 <span>Accounts</span>
             </button>
-            <button class="settings-tab-btn" data-tab="preferences">
+            <button class="settings-tab-btn" data-tab="preferences" title="App Preferences">
                 <i class="fas fa-sliders-h"></i>
                 <span>Preferences</span>
             </button>
-            <button class="settings-tab-btn" data-tab="data">
+            <button class="settings-tab-btn" data-tab="data" title="Data Management">
                 <i class="fas fa-database"></i>
                 <span>Data Management</span>
             </button>
@@ -225,7 +225,7 @@
                         <div>
                             <i class="fas fa-tags"></i> Manage Categories
                         </div>
-                        <button class="btn btn-primary btn-sm" onclick="showAddCategoryModal()">
+                        <button class="btn btn-primary btn-sm" onclick="showAddCategoryModal()" title="Add New Category">
                             <i class="fas fa-plus"></i>
                             <span class="hidden sm:inline ml-1">Add Category</span>
                         </button>
@@ -255,7 +255,7 @@
                                         </div>
                                     </div>
                                     <div class="flex gap-1">
-                                        <button onclick="editCategory({{ $category->id }})" class="text-blue-600 hover:text-blue-800 p-1" title="Edit">
+                                        <button onclick="editCategory({{ $category->id }})" class="text-blue-600 hover:text-blue-800 p-1" title="Edit Category">
                                             <i class="fas fa-edit text-xs"></i>
                                         </button>
                                         <form method="POST" action="{{ route('settings.categories.delete', $category) }}" 
@@ -263,7 +263,7 @@
                                               class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Delete">
+                                            <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Delete Category">
                                                 <i class="fas fa-trash text-xs"></i>
                                             </button>
                                         </form>
@@ -302,7 +302,7 @@
                                         </div>
                                     </div>
                                     <div class="flex gap-1">
-                                        <button onclick="editCategory({{ $category->id }})" class="text-blue-600 hover:text-blue-800 p-1" title="Edit">
+                                        <button onclick="editCategory({{ $category->id }})" class="text-blue-600 hover:text-blue-800 p-1" title="Edit Category">
                                             <i class="fas fa-edit text-xs"></i>
                                         </button>
                                         <form method="POST" action="{{ route('settings.categories.delete', $category) }}" 
@@ -310,7 +310,7 @@
                                               class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Delete">
+                                            <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Delete Category">
                                                 <i class="fas fa-trash text-xs"></i>
                                             </button>
                                         </form>
@@ -337,7 +337,7 @@
                         <div>
                             <i class="fas fa-wallet"></i> Manage Accounts
                         </div>
-                        <button class="btn btn-primary btn-sm" onclick="showAddAccountModal()">
+                        <button class="btn btn-primary btn-sm" onclick="showAddAccountModal()" title="Add New Account">
                             <i class="fas fa-plus"></i>
                             <span class="hidden sm:inline ml-1">Add Account</span>
                         </button>
@@ -366,10 +366,10 @@
                                 <div class="flex gap-1">
                                     <button onclick="toggleAccountStatus({{ $account->id }}, {{ $account->is_active ? 'false' : 'true' }})" 
                                             class="text-{{ $account->is_active ? 'yellow' : 'green' }}-600 hover:text-{{ $account->is_active ? 'yellow' : 'green' }}-800 p-1" 
-                                            title="{{ $account->is_active ? 'Deactivate' : 'Activate' }}">
+                                            title="{{ $account->is_active ? 'Deactivate Account' : 'Activate Account' }}">
                                         <i class="fas fa-{{ $account->is_active ? 'pause' : 'play' }} text-xs"></i>
                                     </button>
-                                    <button onclick="editAccount({{ $account->id }})" class="text-blue-600 hover:text-blue-800 p-1" title="Edit">
+                                    <button onclick="editAccount({{ $account->id }})" class="text-blue-600 hover:text-blue-800 p-1" title="Edit Account">
                                         <i class="fas fa-edit text-xs"></i>
                                     </button>
                                     <form method="POST" action="{{ route('accounts.destroy', $account) }}" 
@@ -377,7 +377,7 @@
                                           class="inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Delete">
+                                        <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Delete Account">
                                             <i class="fas fa-trash text-xs"></i>
                                         </button>
                                     </form>
