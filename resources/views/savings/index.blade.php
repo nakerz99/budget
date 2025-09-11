@@ -305,69 +305,6 @@
         </div>
     </div>
 
-    <!-- Savings Accounts -->
-    <div class="card">
-        <div class="card-header">
-            <i class="fas fa-university"></i> Savings Accounts
-            <span class="text-sm text-gray-500 ml-2">(Your real bank accounts)</span>
-        </div>
-        <div class="card-body">
-            @if($savingsAccounts->count() > 0)
-                <div class="space-y-3">
-                    @foreach($savingsAccounts as $account)
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                <i class="fas fa-university text-blue-600"></i>
-                            </div>
-                            <div class="flex-1">
-                                <div class="font-semibold text-gray-800">{{ $account->name }}</div>
-                                <div class="text-sm text-gray-600">
-                                    {{ $account->bank_name ?? 'Bank' }} • {{ ucfirst(str_replace('_', ' ', $account->account_type)) }}
-                                    @if($account->account_number)
-                                        • {{ $account->account_number }}
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="text-right">
-                                <div class="font-bold text-lg {{ $account->balance >= 0 ? 'text-gray-800' : 'text-red-600' }}">
-                                    {{ currency_symbol() }}{{ number_format($account->balance, 0) }}
-                                </div>
-                                <div class="text-sm text-gray-600">Current Balance</div>
-                            </div>
-                            <div class="flex gap-1">
-                                <button onclick="editAccount({{ $account->id }})" class="text-blue-600 hover:text-blue-800 p-1" title="Edit Account">
-                                    <i class="fas fa-edit text-xs"></i>
-                                </button>
-                                <form method="POST" action="{{ route('savings.destroyAccount', $account) }}" 
-                                      onsubmit="return confirm('Are you sure you want to delete this savings account? This will also delete all associated savings goals.')" 
-                                      class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Delete Account">
-                                        <i class="fas fa-trash text-xs"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            @else
-                <div class="text-center py-8">
-                    <div class="text-4xl mb-4">🏦</div>
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2">No savings accounts</h3>
-                    <p class="text-gray-600 mb-4">Add your real bank accounts to track your savings!</p>
-                    <button onclick="showAddAccountModal()" class="btn btn-primary">
-                        <i class="fas fa-plus"></i>
-                        Add Bank Account
-                    </button>
-                </div>
-            @endif
-        </div>
-    </div>
 </div>
 
 <!-- Add Goal Modal -->

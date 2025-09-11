@@ -48,10 +48,8 @@ class SavingsController extends Controller
             ->orderBy('name')
             ->get();
         
-        // Get savings accounts (accounts with type 'savings')
-        $savingsAccounts = $allAccounts->where('type', 'savings');
-        
         // Calculate total savings and statistics
+        $savingsAccounts = $allAccounts->where('type', 'savings');
         $totalSavings = $savingsAccounts->sum('balance');
         $totalGoalTarget = $savingsGoals->sum('target_amount');
         $totalGoalCurrent = $savingsGoals->sum('current_amount');
@@ -68,15 +66,9 @@ class SavingsController extends Controller
         
         $monthlySavingsRate = $savingsTransactions / 3;
         
-        // Get all accounts for transfers
-        $allAccounts = Account::where('user_id', $user->id)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
         
         return view('savings.index', compact(
             'savingsGoals',
-            'savingsAccounts',
             'totalSavings',
             'totalGoalTarget',
             'totalGoalCurrent',
