@@ -350,7 +350,7 @@
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2">
                                     <div class="w-8 h-8 rounded-full flex items-center justify-center bg-blue-100 text-blue-600 text-sm">
-                                        <i class="fas fa-{{ $account->type === 'checking' ? 'university' : ($account->type === 'savings' ? 'piggy-bank' : 'credit-card') }}"></i>
+                                        <i class="fas fa-{{ $account->type === 'checking' ? 'university' : ($account->type === 'savings' ? 'piggy-bank' : ($account->type === 'cash' ? 'money-bill' : ($account->type === 'wallet' ? 'wallet' : 'credit-card'))) }}"></i>
                                     </div>
                                     <div class="min-w-0 flex-1">
                                         <div class="font-medium text-gray-800 text-sm truncate">{{ $account->name }}</div>
@@ -618,6 +618,8 @@
                     <select name="type" class="form-select" required>
                         <option value="checking">Checking Account</option>
                         <option value="savings">Savings Account</option>
+                        <option value="cash">Cash</option>
+                        <option value="wallet">Wallet</option>
                         <option value="credit">Credit Card</option>
                     </select>
                 </div>
@@ -633,6 +635,54 @@
                     </button>
                     <button type="submit" class="btn btn-primary flex-1">
                         Add Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Account Modal -->
+<div id="editAccountModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-md w-full">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Edit Account</h3>
+                <button onclick="hideEditAccountModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form method="POST" id="editAccountForm">
+                @csrf
+                @method('PUT')
+                <div class="form-group">
+                    <label class="form-label">Account Name</label>
+                    <input type="text" name="name" id="editAccountName" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Account Type</label>
+                    <select name="type" id="editAccountType" class="form-select" required>
+                        <option value="checking">Checking Account</option>
+                        <option value="savings">Savings Account</option>
+                        <option value="cash">Cash</option>
+                        <option value="wallet">Wallet</option>
+                        <option value="credit">Credit Card</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Current Balance</label>
+                    <input type="number" name="balance" id="editAccountBalance" class="form-control" step="0.01" required>
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="hideEditAccountModal()" class="btn btn-secondary flex-1">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary flex-1">
+                        Update Account
                     </button>
                 </div>
             </form>
@@ -728,6 +778,37 @@ document.getElementById('preferencesForm').addEventListener('submit', function(e
     alert('Preferences functionality coming soon!');
 });
 
+// Handle edit account form submission
+document.getElementById('editAccountForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Account updated successfully!');
+            hideEditAccountModal();
+            // Reload the page to show updated data
+            window.location.reload();
+        } else {
+            alert('Error: ' + (data.message || 'Failed to update account'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating the account');
+    });
+});
+
 // Modal functions
 function showAddCategoryModal() {
     document.getElementById('addCategoryModal').classList.remove('hidden');
@@ -743,6 +824,14 @@ function showAddAccountModal() {
 
 function hideAddAccountModal() {
     document.getElementById('addAccountModal').classList.add('hidden');
+}
+
+function showEditAccountModal() {
+    document.getElementById('editAccountModal').classList.remove('hidden');
+}
+
+function hideEditAccountModal() {
+    document.getElementById('editAccountModal').classList.add('hidden');
 }
 
 function showEditCategoryModal() {
@@ -772,7 +861,20 @@ function editCategory(id) {
 }
 
 function editAccount(id) {
-    alert('Account editing functionality coming soon!');
+    // Fetch account data and populate the edit form
+    fetch(`/accounts/${id}/edit`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('editAccountName').value = data.name;
+            document.getElementById('editAccountType').value = data.type;
+            document.getElementById('editAccountBalance').value = data.balance;
+            document.getElementById('editAccountForm').action = `/accounts/${id}`;
+            showEditAccountModal();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading account data');
+        });
 }
 
 function confirmDeleteAllData() {
@@ -783,7 +885,7 @@ function confirmDeleteAllData() {
 
 // Close modals when clicking outside
 document.addEventListener('click', function(event) {
-    const modals = ['addCategoryModal', 'editCategoryModal', 'addAccountModal'];
+    const modals = ['addCategoryModal', 'editCategoryModal', 'addAccountModal', 'editAccountModal'];
     modals.forEach(modalId => {
         const modal = document.getElementById(modalId);
         if (event.target === modal) {
