@@ -80,7 +80,11 @@ class SavingsController extends Controller
             'completedGoalsCount',
             'monthlySavingsRate',
             'allAccounts'
-        ));
+        ))->with([
+            'totalSaved' => $totalGoalCurrent,
+            'totalTarget' => $totalGoalTarget,
+            'completedGoals' => $savingsGoals->where('is_completed', true)
+        ]);
     }
     
     /**
@@ -117,10 +121,41 @@ class SavingsController extends Controller
             'is_completed' => false,
         ]);
         
+        // Check if this is a web request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Savings goal created successfully',
+                'goal' => $goal->load('account'),
+            ]);
+        }
+        
+        return redirect()->route('savings.index')
+            ->with('success', 'Savings goal created successfully');
+    }
+    
+    /**
+     * Show the form for editing a savings goal.
+     *
+     * @param SavingsGoal $savingsGoal
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function editGoal(SavingsGoal $savingsGoal)
+    {
+        $user = Auth::user();
+        
+        // Verify the goal belongs to the user
+        if ($savingsGoal->user_id !== $user->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
         return response()->json([
-            'success' => true,
-            'message' => 'Savings goal created successfully',
-            'goal' => $goal->load('account'),
+            'id' => $savingsGoal->id,
+            'name' => $savingsGoal->name,
+            'target_amount' => $savingsGoal->target_amount,
+            'current_amount' => $savingsGoal->current_amount,
+            'target_date' => $savingsGoal->target_date ? $savingsGoal->target_date->format('Y-m-d') : null,
+            'description' => $savingsGoal->description,
         ]);
     }
     
@@ -141,36 +176,37 @@ class SavingsController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'target_amount' => 'required|numeric|min:0.01',
-            'target_date' => 'required|date|after:today',
-            'account_id' => 'required|exists:accounts,id',
-            'color' => 'nullable|string|max:7',
+            'current_amount' => 'required|numeric|min:0',
+            'target_date' => 'nullable|date|after:today',
+            'description' => 'nullable|string|max:1000',
         ]);
-        
-        // Verify account belongs to user
-        $account = Account::where('id', $request->account_id)
-            ->where('user_id', Auth::id())
-            ->firstOrFail();
         
         $savingsGoal->update([
             'name' => $request->name,
             'target_amount' => $request->target_amount,
+            'current_amount' => $request->current_amount,
             'target_date' => $request->target_date,
-            'account_id' => $request->account_id,
-            'color' => $request->color ?: $savingsGoal->color,
+            'description' => $request->description,
         ]);
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Savings goal updated successfully',
-            'goal' => $savingsGoal->load('account'),
-        ]);
+        // Check if this is a web request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Savings goal updated successfully',
+                'goal' => $savingsGoal->load('account'),
+            ]);
+        }
+        
+        return redirect()->route('savings.index')
+            ->with('success', 'Savings goal updated successfully');
     }
     
     /**
      * Delete a savings goal.
      *
      * @param SavingsGoal $savingsGoal
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function destroyGoal(SavingsGoal $savingsGoal)
     {
@@ -181,10 +217,16 @@ class SavingsController extends Controller
         
         $savingsGoal->delete();
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Savings goal deleted successfully',
-        ]);
+        // Check if this is a web request
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Savings goal deleted successfully',
+            ]);
+        }
+        
+        return redirect()->route('savings.index')
+            ->with('success', 'Savings goal deleted successfully');
     }
     
     /**
@@ -288,14 +330,16 @@ class SavingsController extends Controller
      * Store a new savings account.
      *
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function storeAccount(Request $request)
     {
         $request->validate([
+            'bank_name' => 'required|string|max:255',
             'name' => 'required|string|max:255',
+            'account_type' => 'required|string|max:255',
+            'account_number' => 'nullable|string|max:255',
             'balance' => 'required|numeric|min:0',
-            'color' => 'nullable|string|max:7',
         ]);
         
         $user = Auth::user();
@@ -305,14 +349,122 @@ class SavingsController extends Controller
             'name' => $request->name,
             'type' => 'savings',
             'balance' => $request->balance,
-            'color' => $request->color ?: '#10B981',
+            'bank_name' => $request->bank_name,
+            'account_type' => $request->account_type,
+            'account_number' => $request->account_number,
+            'color' => '#10B981',
             'is_active' => true,
         ]);
         
+        // Check if this is a web request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Savings account created successfully',
+                'account' => $account,
+            ]);
+        }
+        
+        return redirect()->route('savings.index')
+            ->with('success', 'Savings account created successfully');
+    }
+    
+    /**
+     * Show the form for editing a savings account.
+     *
+     * @param Account $account
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function editAccount(Account $account)
+    {
+        $user = Auth::user();
+        
+        // Verify the account belongs to the user
+        if ($account->user_id !== $user->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
         return response()->json([
-            'success' => true,
-            'message' => 'Savings account created successfully',
-            'account' => $account,
+            'id' => $account->id,
+            'name' => $account->name,
+            'bank_name' => $account->bank_name,
+            'account_type' => $account->account_type,
+            'account_number' => $account->account_number,
+            'balance' => $account->balance,
         ]);
+    }
+    
+    /**
+     * Update a savings account.
+     *
+     * @param Request $request
+     * @param Account $account
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
+    public function updateAccount(Request $request, Account $account)
+    {
+        // Verify account belongs to user
+        if ($account->user_id !== Auth::id()) {
+            abort(403);
+        }
+        
+        $request->validate([
+            'bank_name' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
+            'account_type' => 'required|string|max:255',
+            'account_number' => 'nullable|string|max:255',
+            'balance' => 'required|numeric|min:0',
+        ]);
+        
+        $account->update([
+            'name' => $request->name,
+            'bank_name' => $request->bank_name,
+            'account_type' => $request->account_type,
+            'account_number' => $request->account_number,
+            'balance' => $request->balance,
+        ]);
+        
+        // Check if this is a web request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Savings account updated successfully',
+                'account' => $account,
+            ]);
+        }
+        
+        return redirect()->route('savings.index')
+            ->with('success', 'Savings account updated successfully');
+    }
+    
+    /**
+     * Delete a savings account.
+     *
+     * @param Account $account
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
+    public function destroyAccount(Account $account)
+    {
+        // Verify account belongs to user
+        if ($account->user_id !== Auth::id()) {
+            abort(403);
+        }
+        
+        // Delete associated savings goals first
+        $account->savingsGoals()->delete();
+        
+        // Delete the account
+        $account->delete();
+        
+        // Check if this is a web request
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Savings account deleted successfully',
+            ]);
+        }
+        
+        return redirect()->route('savings.index')
+            ->with('success', 'Savings account deleted successfully');
     }
 }

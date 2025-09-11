@@ -47,9 +47,9 @@ class Transaction extends Model
         parent::boot();
 
         static::creating(function ($transaction) {
-            // Ensure amount is positive
-            if ($transaction->amount <= 0) {
-                throw new \InvalidArgumentException('Transaction amount must be positive');
+            // Ensure amount is not zero
+            if ($transaction->amount == 0) {
+                throw new \InvalidArgumentException('Transaction amount cannot be zero');
             }
 
             // Validate transaction type
@@ -84,9 +84,9 @@ class Transaction extends Model
         $account = $this->account;
         
         if ($this->type === 'income') {
-            $account->increment('balance', $this->amount);
+            $account->increment('balance', abs($this->amount));
         } elseif ($this->type === 'expense') {
-            $account->decrement('balance', $this->amount);
+            $account->decrement('balance', abs($this->amount));
         }
         // Transfer doesn't change balance (handled by two transactions)
     }
@@ -99,9 +99,9 @@ class Transaction extends Model
         $account = $this->account;
         
         if ($this->type === 'income') {
-            $account->decrement('balance', $this->amount);
+            $account->decrement('balance', abs($this->amount));
         } elseif ($this->type === 'expense') {
-            $account->increment('balance', $this->amount);
+            $account->increment('balance', abs($this->amount));
         }
     }
 

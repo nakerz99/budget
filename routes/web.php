@@ -36,13 +36,15 @@ Route::get('/account-rejected', [AuthController::class, 'accountRejected'])->nam
 Route::get('/account-approved', [AuthController::class, 'accountApproved'])->name('account-approved');
 
 // Protected Routes
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Transactions
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+    Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+    Route::get('/transactions/{transaction}/edit', [TransactionController::class, 'edit'])->name('transactions.edit');
     Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
     Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
     Route::post('/transactions/bulk-delete', [TransactionController::class, 'bulkDelete'])->name('transactions.bulkDelete');
@@ -50,11 +52,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Budget
     Route::get('/budget', [BudgetController::class, 'index'])->name('budget.index');
     Route::post('/budget', [BudgetController::class, 'store'])->name('budget.store');
+    Route::get('/budget/{budget}/edit', [BudgetController::class, 'edit'])->name('budget.edit');
+    Route::put('/budget/{budget}', [BudgetController::class, 'update'])->name('budget.update');
+    Route::delete('/budget/{budget}', [BudgetController::class, 'destroy'])->name('budget.destroy');
     Route::post('/budget/copy', [BudgetController::class, 'copyFromMonth'])->name('budget.copy');
     
     // Bills
     Route::get('/bills', [BillController::class, 'index'])->name('bills.index');
     Route::post('/bills', [BillController::class, 'store'])->name('bills.store');
+    Route::get('/bills/{bill}/edit', [BillController::class, 'edit'])->name('bills.edit');
     Route::put('/bills/{bill}', [BillController::class, 'update'])->name('bills.update');
     Route::delete('/bills/{bill}', [BillController::class, 'destroy'])->name('bills.destroy');
     Route::post('/bills/{bill}/mark-paid', [BillController::class, 'markPaid'])->name('bills.markPaid');
@@ -62,11 +68,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     
     // Savings
     Route::get('/savings', [SavingsController::class, 'index'])->name('savings.index');
-    Route::post('/savings/goals', [SavingsController::class, 'storeGoal'])->name('savings.goals.store');
-    Route::put('/savings/goals/{savingsGoal}', [SavingsController::class, 'updateGoal'])->name('savings.goals.update');
-    Route::delete('/savings/goals/{savingsGoal}', [SavingsController::class, 'destroyGoal'])->name('savings.goals.destroy');
-    Route::post('/savings/goals/{savingsGoal}/contribute', [SavingsController::class, 'addContribution'])->name('savings.goals.contribute');
-    Route::post('/savings/accounts', [SavingsController::class, 'storeAccount'])->name('savings.accounts.store');
+    Route::post('/savings/goals', [SavingsController::class, 'storeGoal'])->name('savings.storeGoal');
+    Route::get('/savings/goals/{savingsGoal}/edit', [SavingsController::class, 'editGoal'])->name('savings.editGoal');
+    Route::put('/savings/goals/{savingsGoal}', [SavingsController::class, 'updateGoal'])->name('savings.updateGoal');
+    Route::delete('/savings/goals/{savingsGoal}', [SavingsController::class, 'destroyGoal'])->name('savings.destroyGoal');
+    Route::post('/savings/contribute', [SavingsController::class, 'addContribution'])->name('savings.addContribution');
+    Route::post('/savings/accounts', [SavingsController::class, 'storeAccount'])->name('savings.storeAccount');
+    Route::get('/savings/accounts/{account}/edit', [SavingsController::class, 'editAccount'])->name('savings.editAccount');
+    Route::put('/savings/accounts/{account}', [SavingsController::class, 'updateAccount'])->name('savings.updateAccount');
+    Route::delete('/savings/accounts/{account}', [SavingsController::class, 'destroyAccount'])->name('savings.destroyAccount');
     
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
@@ -77,9 +87,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
     Route::put('/settings/pin', [SettingsController::class, 'updatePin'])->name('settings.pin.update');
     Route::post('/settings/categories', [SettingsController::class, 'storeCategory'])->name('settings.categories.store');
+    Route::get('/settings/categories/{category}/edit', [SettingsController::class, 'editCategory'])->name('settings.categories.edit');
     Route::put('/settings/categories/{category}', [SettingsController::class, 'updateCategory'])->name('settings.categories.update');
     Route::delete('/settings/categories/{category}', [SettingsController::class, 'deleteCategory'])->name('settings.categories.delete');
     Route::get('/settings/export', [SettingsController::class, 'exportData'])->name('settings.export');
+    
+    // Account Management
+    Route::post('/accounts', [SettingsController::class, 'storeAccount'])->name('accounts.store');
+    Route::get('/accounts/{account}/edit', [SettingsController::class, 'editAccount'])->name('accounts.edit');
+    Route::put('/accounts/{account}', [SettingsController::class, 'updateAccount'])->name('accounts.update');
+    Route::delete('/accounts/{account}', [SettingsController::class, 'destroyAccount'])->name('accounts.destroy');
     
     // Admin Routes
     Route::middleware(['is_admin'])->prefix('admin')->name('admin.')->group(function () {

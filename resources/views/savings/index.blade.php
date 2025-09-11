@@ -1,53 +1,54 @@
 @extends('layouts.app')
 
+@section('title', 'Savings Goals')
+
 @section('content')
-<div class="container-fluid px-4">
-    <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1 class="h3 mb-0">Savings Goals</h1>
-                <div>
-                    <button class="btn btn-success btn-sm me-2" data-bs-toggle="modal" data-bs-target="#addAccountModal">
-                        <i class="fas fa-piggy-bank"></i> Add Savings Account
-                    </button>
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addGoalModal">
-                        <i class="fas fa-plus"></i> New Goal
-                    </button>
-                </div>
+<div>
+    <!-- Header with integrated summary -->
+    <div class="mb-4 lg:mb-6">
+        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-3 lg:mb-4">
+            <!-- Left side: Title and Add button -->
+            <div class="flex justify-between items-center lg:flex-col lg:items-start lg:gap-2">
+                <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Savings Goals</h1>
+                <button onclick="showAddGoalModal()" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    <span class="hidden sm:inline ml-1">Add Goal</span>
+                    <span class="sm:hidden ml-1">Add</span>
+                </button>
             </div>
             
-            <!-- Summary Cards -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-6 col-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body">
-                            <div class="text-muted small">Total Savings</div>
-                            <div class="h4 mb-0 text-success">{{ currency_symbol() }}{{ number_format($totalSavings, 2) }}</div>
+            <!-- Right side: Financial Summary -->
+            <div class="financial-summary-inline">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+                    <div class="stat-card-inline savings">
+                        <div class="stat-icon-inline">🎯</div>
+                        <div class="stat-content-inline">
+                            <div class="stat-value-inline text-purple-600">{{ $savingsGoals->count() }}</div>
+                            <div class="stat-label-inline">Active</div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-6 col-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body">
-                            <div class="text-muted small">Goals Progress</div>
-                            <div class="h4 mb-0">{{ currency_symbol() }}{{ number_format($totalGoalCurrent, 2) }} / {{ currency_symbol() }}{{ number_format($totalGoalTarget, 2) }}</div>
+
+                    <div class="stat-card-inline balance">
+                        <div class="stat-icon-inline">💰</div>
+                        <div class="stat-content-inline">
+                            <div class="stat-value-inline text-green-600">{{ currency_symbol() }}{{ number_format($totalSaved, 0) }}</div>
+                            <div class="stat-label-inline">Saved</div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-6 col-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body">
-                            <div class="text-muted small">Active Goals</div>
-                            <div class="h4 mb-0">{{ $activeGoalsCount }}</div>
+
+                    <div class="stat-card-inline income">
+                        <div class="stat-icon-inline">📈</div>
+                        <div class="stat-content-inline">
+                            <div class="stat-value-inline text-blue-600">{{ currency_symbol() }}{{ number_format($totalTarget, 0) }}</div>
+                            <div class="stat-label-inline">Target</div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-6 col-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body">
-                            <div class="text-muted small">Monthly Savings</div>
-                            <div class="h4 mb-0 text-info">{{ currency_symbol() }}{{ number_format($monthlySavingsRate, 2) }}</div>
+
+                    <div class="stat-card-inline">
+                        <div class="stat-icon-inline">✅</div>
+                        <div class="stat-content-inline">
+                            <div class="stat-value-inline text-orange-600">{{ $completedGoals->count() }}</div>
+                            <div class="stat-label-inline">Completed</div>
                         </div>
                     </div>
                 </div>
@@ -55,131 +56,198 @@
         </div>
     </div>
 
-    <!-- Savings Goals -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h5 class="mb-3">Active Savings Goals</h5>
-            <div class="row g-3">
-                @forelse($savingsGoals->where('is_completed', false) as $goal)
-                <div class="col-md-6 col-lg-4">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <h5 class="card-title mb-0">{{ $goal->name }}</h5>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li>
-                                            <a class="dropdown-item contribute-btn" href="#" 
-                                               data-goal-id="{{ $goal->id }}"
-                                               data-goal-name="{{ $goal->name }}">
-                                                <i class="fas fa-plus-circle"></i> Add Contribution
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item edit-goal" href="#" 
-                                               data-goal='@json($goal)'
-                                               data-bs-toggle="modal" 
-                                               data-bs-target="#editGoalModal">
-                                                <i class="fas fa-edit"></i> Edit Goal
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item text-danger delete-goal" href="#" 
-                                               data-id="{{ $goal->id }}">
-                                                <i class="fas fa-trash"></i> Delete Goal
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
+    <!-- Active Savings Goals -->
+    <div class="card mb-4 lg:mb-6">
+        <div class="card-header">
+            <i class="fas fa-piggy-bank"></i> Active Goals
+        </div>
+        <div class="card-body p-3 lg:p-4">
+            @if($savingsGoals->count() > 0)
+                <!-- Desktop Table View -->
+                <div class="hidden lg:block">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th class="w-12"></th>
+                                    <th>Goal Name</th>
+                                    <th>Target Amount</th>
+                                    <th>Current Amount</th>
+                                    <th>Progress</th>
+                                    <th>Due Date</th>
+                                    <th class="w-24">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($savingsGoals as $goal)
+                                <tr class="hover:bg-gray-50">
+                                    <td>
+                                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <i class="fas fa-{{ $goal->icon ?: 'piggy-bank' }} text-blue-600 text-xs"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="font-medium text-gray-800 text-sm">
+                                            {{ $goal->name }}
+                                        </div>
+                                    </td>
+                                    <td class="text-sm text-gray-600">
+                                        {{ currency_symbol() }}{{ number_format($goal->target_amount, 0) }}
+                                    </td>
+                                    <td class="text-sm text-gray-800 font-semibold">
+                                        {{ currency_symbol() }}{{ number_format($goal->current_amount, 0) }}
+                                    </td>
+                                    <td>
+                                        @php
+                                            $percentage = min(100, ($goal->current_amount / $goal->target_amount) * 100);
+                                            $barColor = $percentage >= 100 ? '#10b981' : ($percentage >= 75 ? '#3b82f6' : '#f59e0b');
+                                        @endphp
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-16 bg-gray-200 rounded-full h-2">
+                                                <div class="h-2 rounded-full transition-all duration-500" 
+                                                     style="width: {{ $percentage }}%; background: {{ $barColor }};"></div>
+                                            </div>
+                                            <span class="text-xs text-gray-600">{{ number_format($percentage, 1) }}%</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-sm text-gray-500">
+                                        @if($goal->target_date)
+                                            {{ $goal->target_date->format('M d, Y') }}
+                                        @else
+                                            No date
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="flex gap-1">
+                                            <button onclick="addContribution({{ $goal->id }})" class="text-green-600 hover:text-green-800 p-1" title="Add Money">
+                                                <i class="fas fa-plus text-xs"></i>
+                                            </button>
+                                            <button onclick="editGoal({{ $goal->id }})" class="text-blue-600 hover:text-blue-800 p-1" title="Edit">
+                                                <i class="fas fa-edit text-xs"></i>
+                                            </button>
+                                            <form method="POST" action="{{ route('savings.destroyGoal', $goal) }}" 
+                                                  onsubmit="return confirm('Are you sure you want to delete this goal?')" 
+                                                  class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Delete">
+                                                    <i class="fas fa-trash text-xs"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="lg:hidden space-y-2">
+                    @foreach($savingsGoals as $goal)
+                    <div class="savings-goal-item-compact bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-{{ $goal->icon ?: 'piggy-bank' }} text-blue-600 text-xs"></i>
                             </div>
                             
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between mb-1">
-                                    <span class="text-muted">Progress</span>
-                                    <span class="fw-bold">{{ $goal->progress_percentage }}%</span>
-                                </div>
-                                <div class="progress" style="height: 20px;">
-                                    <div class="progress-bar" 
-                                         role="progressbar" 
-                                         style="width: {{ $goal->progress_percentage }}%; background-color: {{ $goal->color }};"
-                                         aria-valuenow="{{ $goal->progress_percentage }}" 
-                                         aria-valuemin="0" 
-                                         aria-valuemax="100">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-semibold text-gray-800 text-sm truncate">{{ $goal->name }}</div>
+                                        <div class="flex items-center gap-2 mt-0.5">
+                                            <span class="text-xs text-gray-600">Target: {{ currency_symbol() }}{{ number_format($goal->target_amount, 0) }}</span>
+                                            @if($goal->target_date)
+                                                <span class="text-xs text-gray-400">•</span>
+                                                <span class="text-xs text-gray-500">{{ $goal->target_date->format('M d, Y') }}</span>
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <div class="w-20 bg-gray-200 rounded-full h-1.5">
+                                                @php
+                                                    $percentage = min(100, ($goal->current_amount / $goal->target_amount) * 100);
+                                                    $barColor = $percentage >= 100 ? '#10b981' : ($percentage >= 75 ? '#3b82f6' : '#f59e0b');
+                                                @endphp
+                                                <div class="h-1.5 rounded-full transition-all duration-500" 
+                                                     style="width: {{ $percentage }}%; background: {{ $barColor }};"></div>
+                                            </div>
+                                            <span class="text-xs text-gray-600">{{ number_format($percentage, 1) }}%</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex flex-col items-end gap-1 ml-2">
+                                        <div class="font-semibold text-sm text-gray-800">
+                                            {{ currency_symbol() }}{{ number_format($goal->current_amount, 0) }}
+                                        </div>
+                                        <div class="text-xs text-gray-600">
+                                            {{ currency_symbol() }}{{ number_format($goal->target_amount - $goal->current_amount, 0) }} left
+                                        </div>
+                                        
+                                        <div class="flex gap-1">
+                                            <button onclick="addContribution({{ $goal->id }})" class="text-green-600 hover:text-green-800 p-1" title="Add Money">
+                                                <i class="fas fa-plus text-xs"></i>
+                                            </button>
+                                            <button onclick="editGoal({{ $goal->id }})" class="text-blue-600 hover:text-blue-800 p-1" title="Edit">
+                                                <i class="fas fa-edit text-xs"></i>
+                                            </button>
+                                            <form method="POST" action="{{ route('savings.destroyGoal', $goal) }}" 
+                                                  onsubmit="return confirm('Are you sure you want to delete this goal?')" 
+                                                  class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Delete">
+                                                    <i class="fas fa-trash text-xs"></i>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div class="row text-center">
-                                <div class="col-6">
-                                    <div class="text-muted small">Current</div>
-                                    <div class="fw-bold">{{ currency_symbol() }}{{ number_format($goal->current_amount, 2) }}</div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="text-muted small">Target</div>
-                                    <div class="fw-bold">{{ currency_symbol() }}{{ number_format($goal->target_amount, 2) }}</div>
-                                </div>
-                            </div>
-                            
-                            <hr>
-                            
-                            <div class="row text-center">
-                                <div class="col-6">
-                                    <div class="text-muted small">Days Left</div>
-                                    <div class="fw-bold {{ $goal->days_remaining < 30 ? 'text-warning' : '' }}">
-                                        {{ max(0, $goal->days_remaining) }}
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="text-muted small">Monthly Need</div>
-                                    <div class="fw-bold">{{ currency_symbol() }}{{ number_format($goal->monthly_required, 2) }}</div>
-                                </div>
-                            </div>
-                            
-                            <div class="mt-3">
-                                <small class="text-muted">
-                                    <i class="fas fa-piggy-bank"></i> {{ $goal->account->name }}
-                                </small>
                             </div>
                         </div>
                     </div>
+                    @endforeach
                 </div>
-                @empty
-                <div class="col-12">
-                    <div class="text-center py-5">
-                        <i class="fas fa-bullseye fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">No active savings goals. Create your first goal to start saving!</p>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGoalModal">
-                            Create Savings Goal
-                        </button>
-                    </div>
+            @else
+                <div class="text-center py-8 lg:py-12">
+                    <div class="text-4xl lg:text-6xl mb-3 lg:mb-4">🎯</div>
+                    <h3 class="text-lg lg:text-xl font-semibold text-gray-800 mb-2">No savings goals yet</h3>
+                    <p class="text-sm lg:text-base text-gray-600 mb-4 lg:mb-6">Create your first savings goal to start building your financial future!</p>
+                    <button onclick="showAddGoalModal()" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Create Goal
+                    </button>
                 </div>
-                @endforelse
-            </div>
+            @endif
         </div>
     </div>
 
     <!-- Completed Goals -->
-    @if($savingsGoals->where('is_completed', true)->count() > 0)
-    <div class="row mb-4">
-        <div class="col-12">
-            <h5 class="mb-3">Completed Goals 🎉</h5>
-            <div class="row g-3">
-                @foreach($savingsGoals->where('is_completed', true) as $goal)
-                <div class="col-md-6 col-lg-4">
-                    <div class="card border-0 shadow-sm h-100 bg-light">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                {{ $goal->name }} 
-                                <span class="badge bg-success">Completed</span>
-                            </h5>
-                            <p class="mb-0">
-                                <strong>Saved:</strong> {{ currency_symbol() }}{{ number_format($goal->current_amount, 2) }}<br>
-                                <strong>Completed:</strong> {{ $goal->updated_at->format('M d, Y') }}
-                            </p>
+    @if($completedGoals->count() > 0)
+    <div class="card mb-6">
+        <div class="card-header">
+            <i class="fas fa-trophy"></i> Completed Goals
+        </div>
+        <div class="card-body">
+            <div class="space-y-3">
+                @foreach($completedGoals as $goal)
+                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                            <i class="fas fa-trophy text-green-600"></i>
                         </div>
+                        <div>
+                            <div class="font-medium text-gray-800">{{ $goal->name }}</div>
+                            <div class="text-sm text-gray-600">
+                                Completed {{ $goal->updated_at->format('M d, Y') }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-semibold text-green-600">
+                            {{ currency_symbol() }}{{ number_format($goal->target_amount, 0) }}
+                        </div>
+                        <div class="text-sm text-gray-600">Achieved!</div>
                     </div>
                 </div>
                 @endforeach
@@ -189,136 +257,132 @@
     @endif
 
     <!-- Savings Accounts -->
-    <div class="row">
-        <div class="col-12">
-            <h5 class="mb-3">Savings Accounts</h5>
-            <div class="row g-3">
-                @forelse($savingsAccounts as $account)
-                <div class="col-md-6 col-lg-4">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ $account->name }}</h5>
-                            <h3 class="text-success">{{ currency_symbol() }}{{ number_format($account->balance, 2) }}</h3>
-                            <small class="text-muted">
-                                {{ $savingsGoals->where('account_id', $account->id)->count() }} active goal(s)
-                            </small>
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-university"></i> Savings Accounts
+            <span class="text-sm text-gray-500 ml-2">(Your real bank accounts)</span>
+        </div>
+        <div class="card-body">
+            @if($savingsAccounts->count() > 0)
+                <div class="space-y-3">
+                    @foreach($savingsAccounts as $account)
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                <i class="fas fa-university text-blue-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-semibold text-gray-800">{{ $account->name }}</div>
+                                <div class="text-sm text-gray-600">
+                                    {{ $account->bank_name ?? 'Bank' }} • {{ ucfirst(str_replace('_', ' ', $account->account_type)) }}
+                                    @if($account->account_number)
+                                        • {{ $account->account_number }}
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <div class="font-bold text-lg {{ $account->balance >= 0 ? 'text-gray-800' : 'text-red-600' }}">
+                                    {{ currency_symbol() }}{{ number_format($account->balance, 0) }}
+                                </div>
+                                <div class="text-sm text-gray-600">Current Balance</div>
+                            </div>
+                            <div class="flex gap-1">
+                                <button onclick="editAccount({{ $account->id }})" class="text-blue-600 hover:text-blue-800 p-1" title="Edit Account">
+                                    <i class="fas fa-edit text-xs"></i>
+                                </button>
+                                <form method="POST" action="{{ route('savings.destroyAccount', $account) }}" 
+                                      onsubmit="return confirm('Are you sure you want to delete this savings account? This will also delete all associated savings goals.')" 
+                                      class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Delete Account">
+                                        <i class="fas fa-trash text-xs"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
+                    @endforeach
                 </div>
-                @empty
-                <div class="col-12">
-                    <div class="text-center py-4">
-                        <p class="text-muted">No savings accounts yet. Create one to start tracking your savings!</p>
-                    </div>
+            @else
+                <div class="text-center py-8">
+                    <div class="text-4xl mb-4">🏦</div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">No savings accounts</h3>
+                    <p class="text-gray-600 mb-4">Add your real bank accounts to track your savings!</p>
+                    <button onclick="showAddAccountModal()" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Add Bank Account
+                    </button>
                 </div>
-                @endforelse
-            </div>
+            @endif
         </div>
     </div>
 </div>
 
 <!-- Add Goal Modal -->
-<div class="modal fade" id="addGoalModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="addGoalForm">
+<div id="addGoalModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Create Savings Goal</h3>
+                <button onclick="hideAddGoalModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form method="POST" action="{{ route('savings.storeGoal') }}">
                 @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title">Create Savings Goal</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="form-group">
+                    <label class="form-label">Goal Name</label>
+                    <input type="text" name="name" class="form-control" 
+                           placeholder="e.g., Emergency Fund" required>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Goal Name</label>
-                        <input type="text" class="form-control" name="name" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Target Amount</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" name="target_amount" step="0.01" min="0.01" required>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Target Date</label>
-                        <input type="date" class="form-control" name="target_date" min="{{ date('Y-m-d', strtotime('+1 day')) }}" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Savings Account</label>
-                        <select class="form-select" name="account_id" required>
-                            <option value="">Select Account</option>
-                            @foreach($savingsAccounts as $account)
-                                <option value="{{ $account->id }}">{{ $account->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Color</label>
-                        <input type="color" class="form-control form-control-color" name="color" value="#8B5CF6">
-                    </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Target Amount</label>
+                    <input type="number" name="target_amount" class="form-control" 
+                           placeholder="0.00" step="0.01" min="0" required>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Goal</button>
+                
+                <div class="form-group">
+                    <label class="form-label">Savings Account</label>
+                    <select name="account_id" class="form-select" required>
+                        <option value="">Select savings account</option>
+                        @foreach($savingsAccounts as $account)
+                            <option value="{{ $account->id }}">
+                                {{ $account->name }} ({{ $account->bank_name ?? 'Bank' }}) - {{ currency_symbol() }}{{ number_format($account->balance, 0) }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="text-gray-500">Choose which bank account to save money in</small>
                 </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Goal Modal -->
-<div class="modal fade" id="editGoalModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="editGoalForm">
-                @csrf
-                @method('PUT')
-                <input type="hidden" name="goal_id" id="editGoalId">
-                <div class="modal-header">
-                    <h5 class="modal-title">Edit Savings Goal</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                
+                <div class="form-group">
+                    <label class="form-label">Current Amount</label>
+                    <input type="number" name="current_amount" class="form-control" 
+                           placeholder="0.00" step="0.01" min="0" value="0">
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Goal Name</label>
-                        <input type="text" class="form-control" name="name" id="editName" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Target Amount</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" name="target_amount" id="editTargetAmount" step="0.01" min="0.01" required>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Target Date</label>
-                        <input type="date" class="form-control" name="target_date" id="editTargetDate" min="{{ date('Y-m-d', strtotime('+1 day')) }}" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Savings Account</label>
-                        <select class="form-select" name="account_id" id="editAccount" required>
-                            <option value="">Select Account</option>
-                            @foreach($savingsAccounts as $account)
-                                <option value="{{ $account->id }}">{{ $account->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Color</label>
-                        <input type="color" class="form-control form-control-color" name="color" id="editColor">
-                    </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Target Date (Optional)</label>
+                    <input type="date" name="target_date" class="form-control">
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Goal</button>
+                
+                <div class="form-group">
+                    <label class="form-label">Description (Optional)</label>
+                    <textarea name="description" class="form-control" rows="3" 
+                              placeholder="Describe your savings goal..."></textarea>
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="hideAddGoalModal()" class="btn btn-secondary flex-1">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary flex-1">
+                        Create Goal
+                    </button>
                 </div>
             </form>
         </div>
@@ -326,218 +390,361 @@
 </div>
 
 <!-- Add Contribution Modal -->
-<div class="modal fade" id="contributionModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="contributionForm">
+<div id="addContributionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-md w-full">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Add Contribution</h3>
+                <button onclick="hideAddContributionModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form method="POST" action="{{ route('savings.addContribution') }}">
                 @csrf
                 <input type="hidden" name="goal_id" id="contributionGoalId">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Contribution to <span id="contributionGoalName"></span></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                
+                <div class="form-group">
+                    <label class="form-label">Amount</label>
+                    <input type="number" name="amount" class="form-control" 
+                           placeholder="0.00" step="0.01" min="0.01" required>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Amount</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" name="amount" step="0.01" min="0.01" required>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">From Account</label>
-                        <select class="form-select" name="from_account_id" required>
-                            <option value="">Select Account</option>
-                            @foreach($allAccounts->where('type', '!=', 'savings') as $account)
-                                <option value="{{ $account->id }}">
-                                    {{ $account->name }} ({{ currency_symbol() }}{{ number_format($account->balance, 2) }})
+                
+                <div class="form-group">
+                    <label class="form-label">Transfer From Account</label>
+                    <select name="from_account_id" class="form-select" required>
+                        <option value="">Select source account</option>
+                        @foreach($allAccounts as $account)
+                            @if($account->type !== 'savings')
+                                <option value="{{ $account->id }}" data-balance="{{ $account->balance }}">
+                                    {{ $account->name }} - {{ currency_symbol() }}{{ number_format($account->balance, 0) }}
                                 </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Description (Optional)</label>
-                        <input type="text" class="form-control" name="description">
-                    </div>
+                            @endif
+                        @endforeach
+                    </select>
+                    <small class="text-gray-500">Choose which account to transfer money from</small>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">Add Contribution</button>
+                
+                <div class="form-group">
+                    <label class="form-label">Description (Optional)</label>
+                    <input type="text" name="description" class="form-control" 
+                           placeholder="e.g., Monthly contribution">
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="hideAddContributionModal()" class="btn btn-secondary flex-1">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success flex-1">
+                        Add Contribution
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Add Savings Account Modal -->
-<div class="modal fade" id="addAccountModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="addAccountForm">
+<!-- Add Account Modal -->
+<div id="addAccountModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-md w-full">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Add Savings Account</h3>
+                <button onclick="hideAddAccountModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form method="POST" action="{{ route('savings.storeAccount') }}">
                 @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Savings Account</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="form-group">
+                    <label class="form-label">Bank Name</label>
+                    <input type="text" name="bank_name" class="form-control" 
+                           placeholder="e.g., BPI, BDO, Metrobank" required>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Account Name</label>
-                        <input type="text" class="form-control" name="name" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Initial Balance</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" name="balance" step="0.01" min="0" value="0" required>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Color</label>
-                        <input type="color" class="form-control form-control-color" name="color" value="#10B981">
-                    </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Account Name</label>
+                    <input type="text" name="name" class="form-control" 
+                           placeholder="e.g., BPI Savings, BDO Time Deposit" required>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">Create Account</button>
+                
+                <div class="form-group">
+                    <label class="form-label">Account Type</label>
+                    <select name="account_type" class="form-select" required>
+                        <option value="savings">Savings Account</option>
+                        <option value="time_deposit">Time Deposit</option>
+                        <option value="money_market">Money Market</option>
+                        <option value="cd">Certificate of Deposit</option>
+                        <option value="investment">Investment Account</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Account Number (Optional)</label>
+                    <input type="text" name="account_number" class="form-control" 
+                           placeholder="e.g., 1234-5678-9012">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Current Balance</label>
+                    <input type="number" name="balance" class="form-control" 
+                           placeholder="0.00" step="0.01" min="0" value="0" required>
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="hideAddAccountModal()" class="btn btn-secondary flex-1">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary flex-1">
+                        Add Account
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-@endsection
+<!-- Edit Account Modal -->
+<div id="editAccountModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-md w-full">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Edit Savings Account</h3>
+                <button onclick="hideEditAccountModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form method="POST" id="editAccountForm">
+                @csrf
+                @method('PUT')
+                <div class="form-group">
+                    <label class="form-label">Bank Name</label>
+                    <input type="text" name="bank_name" id="editBankName" class="form-control" 
+                           placeholder="e.g., BPI, BDO, Metrobank" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Account Name</label>
+                    <input type="text" name="name" id="editAccountName" class="form-control" 
+                           placeholder="e.g., BPI Savings, BDO Time Deposit" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Account Type</label>
+                    <select name="account_type" id="editAccountType" class="form-select" required>
+                        <option value="savings">Savings Account</option>
+                        <option value="time_deposit">Time Deposit</option>
+                        <option value="money_market">Money Market</option>
+                        <option value="cd">Certificate of Deposit</option>
+                        <option value="investment">Investment Account</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Account Number (Optional)</label>
+                    <input type="text" name="account_number" id="editAccountNumber" class="form-control" 
+                           placeholder="e.g., 1234-5678-9012">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Current Balance</label>
+                    <input type="number" name="balance" id="editAccountBalance" class="form-control" 
+                           placeholder="0.00" step="0.01" min="0" required>
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="hideEditAccountModal()" class="btn btn-secondary flex-1">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary flex-1">
+                        Update Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-@section('scripts')
+<!-- Edit Goal Modal -->
+<div id="editGoalModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Edit Savings Goal</h3>
+                <button onclick="hideEditGoalModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form method="POST" id="editGoalForm">
+                @csrf
+                @method('PUT')
+                <div class="form-group">
+                    <label class="form-label">Goal Name</label>
+                    <input type="text" name="name" id="editGoalName" class="form-control" 
+                           placeholder="e.g., Emergency Fund" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Target Amount</label>
+                    <input type="number" name="target_amount" id="editTargetAmount" class="form-control" 
+                           placeholder="0.00" step="0.01" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Current Amount</label>
+                    <input type="number" name="current_amount" id="editCurrentAmount" class="form-control" 
+                           placeholder="0.00" step="0.01" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Target Date (Optional)</label>
+                    <input type="date" name="target_date" id="editTargetDate" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Description (Optional)</label>
+                    <textarea name="description" id="editDescription" class="form-control" rows="3" 
+                              placeholder="Describe your savings goal..."></textarea>
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="hideEditGoalModal()" class="btn btn-secondary flex-1">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary flex-1">
+                        Update Goal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
 <script>
-$(document).ready(function() {
-    // Add Goal
-    $('#addGoalForm').on('submit', function(e) {
+    function showAddGoalModal() {
+        document.getElementById('addGoalModal').classList.remove('hidden');
+    }
+    
+    function hideAddGoalModal() {
+        document.getElementById('addGoalModal').classList.add('hidden');
+    }
+    
+    function showAddAccountModal() {
+        document.getElementById('addAccountModal').classList.remove('hidden');
+    }
+    
+    function hideAddAccountModal() {
+        document.getElementById('addAccountModal').classList.add('hidden');
+    }
+    
+    function addContribution(goalId) {
+        document.getElementById('contributionGoalId').value = goalId;
+        document.getElementById('addContributionModal').classList.remove('hidden');
+    }
+    
+    function hideAddContributionModal() {
+        document.getElementById('addContributionModal').classList.add('hidden');
+    }
+    
+    function showEditGoalModal() {
+        document.getElementById('editGoalModal').classList.remove('hidden');
+    }
+    
+    function hideEditGoalModal() {
+        document.getElementById('editGoalModal').classList.add('hidden');
+    }
+    
+    function showEditAccountModal() {
+        document.getElementById('editAccountModal').classList.remove('hidden');
+    }
+    
+    function hideEditAccountModal() {
+        document.getElementById('editAccountModal').classList.add('hidden');
+    }
+    
+    function editAccount(accountId) {
+        // Fetch account data and populate the edit form
+        fetch(`/savings/accounts/${accountId}/edit`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('editBankName').value = data.bank_name || '';
+                document.getElementById('editAccountName').value = data.name;
+                document.getElementById('editAccountType').value = data.account_type;
+                document.getElementById('editAccountNumber').value = data.account_number || '';
+                document.getElementById('editAccountBalance').value = data.balance;
+                document.getElementById('editAccountForm').action = `/savings/accounts/${accountId}`;
+                showEditAccountModal();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error loading account data');
+            });
+    }
+    
+    function editGoal(goalId) {
+        // Fetch goal data and populate the edit form
+        fetch(`/savings/goals/${goalId}/edit`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('editGoalName').value = data.name;
+                document.getElementById('editTargetAmount').value = data.target_amount;
+                document.getElementById('editCurrentAmount').value = data.current_amount;
+                document.getElementById('editTargetDate').value = data.target_date;
+                document.getElementById('editDescription').value = data.description || '';
+                document.getElementById('editGoalForm').action = `/savings/goals/${goalId}`;
+                showEditGoalModal();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error loading goal data');
+            });
+    }
+    
+    // Close modals when clicking outside
+    document.addEventListener('click', function(event) {
+        const modals = ['addGoalModal', 'addContributionModal', 'addAccountModal', 'editAccountModal', 'editGoalModal'];
+        modals.forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (event.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    });
+    
+    // Handle edit account form submission
+    document.getElementById('editAccountForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        $.ajax({
-            url: '{{ route("savings.goals.store") }}',
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
             method: 'POST',
-            data: $(this).serialize(),
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                }
-            },
-            error: function(xhr) {
-                alert('Error: ' + xhr.responseJSON.message);
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                alert('Account updated successfully!');
+                // Reload the page to show updated data
+                window.location.reload();
+            } else {
+                // Show error message
+                alert('Error: ' + (data.message || 'Failed to update account'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the account');
         });
     });
-    
-    // Edit Goal
-    $('.edit-goal').on('click', function() {
-        const goal = $(this).data('goal');
-        $('#editGoalId').val(goal.id);
-        $('#editName').val(goal.name);
-        $('#editTargetAmount').val(goal.target_amount);
-        $('#editTargetDate').val(goal.target_date);
-        $('#editAccount').val(goal.account_id);
-        $('#editColor').val(goal.color);
-    });
-    
-    $('#editGoalForm').on('submit', function(e) {
-        e.preventDefault();
-        const goalId = $('#editGoalId').val();
-        
-        $.ajax({
-            url: `/savings/goals/${goalId}`,
-            method: 'PUT',
-            data: $(this).serialize(),
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                }
-            },
-            error: function(xhr) {
-                alert('Error: ' + xhr.responseJSON.message);
-            }
-        });
-    });
-    
-    // Delete Goal
-    $('.delete-goal').on('click', function(e) {
-        e.preventDefault();
-        
-        if (!confirm('Are you sure you want to delete this savings goal?')) {
-            return;
-        }
-        
-        const goalId = $(this).data('id');
-        
-        $.ajax({
-            url: `/savings/goals/${goalId}`,
-            method: 'DELETE',
-            data: {
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                }
-            },
-            error: function(xhr) {
-                alert('Error: ' + xhr.responseJSON.message);
-            }
-        });
-    });
-    
-    // Add Contribution
-    $('.contribute-btn').on('click', function(e) {
-        e.preventDefault();
-        const goalId = $(this).data('goal-id');
-        const goalName = $(this).data('goal-name');
-        
-        $('#contributionGoalId').val(goalId);
-        $('#contributionGoalName').text(goalName);
-        $('#contributionModal').modal('show');
-    });
-    
-    $('#contributionForm').on('submit', function(e) {
-        e.preventDefault();
-        const goalId = $('#contributionGoalId').val();
-        
-        $.ajax({
-            url: `/savings/goals/${goalId}/contribute`,
-            method: 'POST',
-            data: $(this).serialize(),
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                }
-            },
-            error: function(xhr) {
-                alert('Error: ' + (xhr.responseJSON?.error || xhr.responseJSON?.message || 'An error occurred'));
-            }
-        });
-    });
-    
-    // Add Savings Account
-    $('#addAccountForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        $.ajax({
-            url: '{{ route("savings.accounts.store") }}',
-            method: 'POST',
-            data: $(this).serialize(),
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                }
-            },
-            error: function(xhr) {
-                alert('Error: ' + xhr.responseJSON.message);
-            }
-        });
-    });
-});
 </script>
 @endsection

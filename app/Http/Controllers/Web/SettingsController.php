@@ -27,7 +27,13 @@ class SettingsController extends Controller
             ->get()
             ->groupBy('type');
         
-        return view('settings.index', compact('user', 'categories'));
+        // Get user's accounts
+        $accounts = \App\Models\Account::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+        
+        return view('settings.index', compact('user', 'categories', 'accounts'));
     }
     
     /**
@@ -136,6 +142,29 @@ class SettingsController extends Controller
     }
     
     /**
+     * Show the form for editing a category.
+     *
+     * @param Category $category
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function editCategory(Category $category)
+    {
+        // Verify category belongs to user
+        if ($category->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        return response()->json([
+            'id' => $category->id,
+            'name' => $category->name,
+            'type' => $category->type,
+            'color' => $category->color,
+            'icon' => $category->icon,
+            'is_active' => $category->is_active,
+        ]);
+    }
+    
+    /**
      * Update a category.
      *
      * @param Request $request
@@ -232,5 +261,139 @@ class SettingsController extends Controller
         return response()->json($data)
             ->header('Content-Type', 'application/json')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+    
+    /**
+     * Store a new account.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
+    public function storeAccount(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:checking,savings,credit',
+            'balance' => 'required|numeric|min:0',
+        ]);
+        
+        $user = Auth::user();
+        
+        $account = \App\Models\Account::create([
+            'user_id' => $user->id,
+            'name' => $request->name,
+            'type' => $request->type,
+            'balance' => $request->balance,
+            'color' => $request->type === 'checking' ? '#3b82f6' : ($request->type === 'savings' ? '#10b981' : '#f59e0b'),
+            'is_active' => true,
+        ]);
+        
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Account created successfully',
+                'account' => $account,
+            ]);
+        }
+        
+        return redirect()->route('settings.index')
+            ->with('success', 'Account created successfully');
+    }
+    
+    /**
+     * Show the form for editing an account.
+     *
+     * @param \App\Models\Account $account
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function editAccount(\App\Models\Account $account)
+    {
+        // Verify account belongs to user
+        if ($account->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        return response()->json([
+            'id' => $account->id,
+            'name' => $account->name,
+            'type' => $account->type,
+            'balance' => $account->balance,
+        ]);
+    }
+    
+    /**
+     * Update an account.
+     *
+     * @param Request $request
+     * @param \App\Models\Account $account
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
+    public function updateAccount(Request $request, \App\Models\Account $account)
+    {
+        // Verify account belongs to user
+        if ($account->user_id !== Auth::id()) {
+            abort(403);
+        }
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:checking,savings,credit',
+            'balance' => 'required|numeric|min:0',
+        ]);
+        
+        $account->update([
+            'name' => $request->name,
+            'type' => $request->type,
+            'balance' => $request->balance,
+        ]);
+        
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Account updated successfully',
+                'account' => $account,
+            ]);
+        }
+        
+        return redirect()->route('settings.index')
+            ->with('success', 'Account updated successfully');
+    }
+    
+    /**
+     * Delete an account.
+     *
+     * @param \App\Models\Account $account
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
+    public function destroyAccount(\App\Models\Account $account)
+    {
+        // Verify account belongs to user
+        if ($account->user_id !== Auth::id()) {
+            abort(403);
+        }
+        
+        // Check if account has transactions
+        $transactionCount = $account->transactions()->count();
+        if ($transactionCount > 0) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'error' => "Cannot delete account with {$transactionCount} transactions. Please reassign transactions first.",
+                ], 400);
+            }
+            return redirect()->route('settings.index')
+                ->with('error', "Cannot delete account with {$transactionCount} transactions. Please reassign transactions first.");
+        }
+        
+        $account->delete();
+        
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Account deleted successfully',
+            ]);
+        }
+        
+        return redirect()->route('settings.index')
+            ->with('success', 'Account deleted successfully');
     }
 }

@@ -198,8 +198,8 @@ class DashboardDataService
      */
     public function getSpendingByCategory(User $user, string $month)
     {
-        return Transaction::where('user_id', $user->id)
-            ->where('type', 'expense')
+        return Transaction::where('transactions.user_id', $user->id)
+            ->where('transactions.type', 'expense')
             ->whereRaw('DATE_FORMAT(transaction_date, "%Y-%m") = ?', [$month])
             ->join('categories', 'transactions.category_id', '=', 'categories.id')
             ->selectRaw('categories.id, categories.name, categories.color, SUM(transactions.amount) as total_spent')

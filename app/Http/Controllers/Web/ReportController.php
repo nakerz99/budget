@@ -146,6 +146,7 @@ class ReportController extends Controller
         return $trend;
     }
     
+    
     /**
      * Get top expenses.
      */
@@ -193,10 +194,12 @@ class ReportController extends Controller
         $performance = [];
         foreach ($budgets as $budget) {
             $spent = $spending->get($budget->category_id, 0);
+            $remaining = $budget->amount - $spent;
             $performance[] = [
                 'category' => $budget->category->name,
                 'budget' => $budget->amount,
                 'spent' => $spent,
+                'remaining' => $remaining,
                 'percentage' => $budget->amount > 0 ? round(($spent / $budget->amount) * 100, 1) : 0,
             ];
         }

@@ -1,87 +1,66 @@
 @extends('layouts.app')
 
+@section('title', 'Financial Reports')
+
 @section('content')
-<div class="container-fluid px-4">
-    <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1 class="h3 mb-0">Financial Reports</h1>
-                <div class="d-flex gap-2">
-                    <form method="GET" action="{{ route('reports.index') }}" class="d-flex gap-2">
+<div>
+    <!-- Header with integrated summary -->
+    <div class="mb-4 lg:mb-6">
+        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-3 lg:mb-4">
+            <!-- Left side: Title and controls -->
+            <div class="flex-1">
+                <h1 class="text-xl lg:text-2xl font-bold text-gray-800 mb-3">Financial Reports</h1>
+                
+                <!-- Date Range and Export -->
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <form method="GET" action="{{ route('reports.index') }}" class="flex flex-col sm:flex-row gap-2 flex-1">
                         <input type="date" class="form-control" name="start_date" value="{{ $startDate }}" max="{{ date('Y-m-d') }}">
                         <input type="date" class="form-control" name="end_date" value="{{ $endDate }}" max="{{ date('Y-m-d') }}">
-                        <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-filter"></i>
+                            <span class="hidden sm:inline ml-1">Apply</span>
+                        </button>
                     </form>
                     <a href="{{ route('reports.export.csv') }}?start_date={{ $startDate }}&end_date={{ $endDate }}" class="btn btn-success btn-sm">
-                        <i class="fas fa-download"></i> Export CSV
+                        <i class="fas fa-download"></i>
+                        <span class="hidden sm:inline ml-1">Export CSV</span>
+                        <span class="sm:hidden ml-1">Export</span>
                     </a>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Financial Summary -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Financial Summary</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-3 col-6">
-                            <div class="text-center">
-                                <div class="text-muted small">Total Income</div>
-                                <div class="h4 mb-0 text-success">{{ currency_symbol() }}{{ number_format($summary['total_income'], 2) }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6">
-                            <div class="text-center">
-                                <div class="text-muted small">Total Expenses</div>
-                                <div class="h4 mb-0 text-danger">{{ currency_symbol() }}{{ number_format($summary['total_expenses'], 2) }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6">
-                            <div class="text-center">
-                                <div class="text-muted small">Net Income</div>
-                                <div class="h4 mb-0 {{ $summary['net_income'] >= 0 ? 'text-success' : 'text-danger' }}">
-                                    {{ currency_symbol() }}{{ number_format(abs($summary['net_income']), 2) }}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6">
-                            <div class="text-center">
-                                <div class="text-muted small">Savings Rate</div>
-                                <div class="h4 mb-0">{{ $summary['savings_rate'] }}%</div>
-                            </div>
+            
+            <!-- Right side: Financial Summary -->
+            <div class="financial-summary-inline">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+                    <div class="stat-card-inline income">
+                        <div class="stat-icon-inline">📈</div>
+                        <div class="stat-content-inline">
+                            <div class="stat-value-inline text-green-600">{{ currency_symbol() }}{{ number_format($summary['total_income'], 0) }}</div>
+                            <div class="stat-label-inline">Income</div>
                         </div>
                     </div>
-                    <hr>
-                    <div class="row g-3">
-                        <div class="col-md-3 col-6">
-                            <div class="text-center">
-                                <div class="text-muted small">Net Worth</div>
-                                <div class="h5 mb-0 text-primary">{{ currency_symbol() }}{{ number_format($summary['net_worth'], 2) }}</div>
-                            </div>
+
+                    <div class="stat-card-inline expense">
+                        <div class="stat-icon-inline">📉</div>
+                        <div class="stat-content-inline">
+                            <div class="stat-value-inline text-red-600">{{ currency_symbol() }}{{ number_format($summary['total_expenses'], 0) }}</div>
+                            <div class="stat-label-inline">Expenses</div>
                         </div>
-                        <div class="col-md-3 col-6">
-                            <div class="text-center">
-                                <div class="text-muted small">Total Savings</div>
-                                <div class="h5 mb-0">{{ currency_symbol() }}{{ number_format($summary['total_savings'], 2) }}</div>
-                            </div>
+                    </div>
+
+                    <div class="stat-card-inline balance">
+                        <div class="stat-icon-inline">💰</div>
+                        <div class="stat-content-inline">
+                            <div class="stat-value-inline {{ $summary['net_income'] >= 0 ? 'text-green-600' : 'text-red-600' }}">{{ currency_symbol() }}{{ number_format(abs($summary['net_income']), 0) }}</div>
+                            <div class="stat-label-inline">Net</div>
                         </div>
-                        <div class="col-md-3 col-6">
-                            <div class="text-center">
-                                <div class="text-muted small">Monthly Bills</div>
-                                <div class="h5 mb-0">{{ currency_symbol() }}{{ number_format($summary['monthly_bills'], 2) }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6">
-                            <div class="text-center">
-                                <div class="text-muted small">Avg Daily Spending</div>
-                                <div class="h5 mb-0">{{ currency_symbol() }}{{ number_format($summary['avg_daily_spending'], 2) }}</div>
-                            </div>
+                    </div>
+
+                    <div class="stat-card-inline">
+                        <div class="stat-icon-inline">📊</div>
+                        <div class="stat-content-inline">
+                            <div class="stat-value-inline text-blue-600">{{ $summary['savings_rate'] }}%</div>
+                            <div class="stat-label-inline">Savings</div>
                         </div>
                     </div>
                 </div>
@@ -89,302 +68,292 @@
         </div>
     </div>
 
-    <!-- Charts Row 1 -->
-    <div class="row mb-4">
-        <!-- Income vs Expenses -->
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Income vs Expenses</h5>
-                </div>
-                <div class="card-body" style="height: 300px; position: relative;">
+    <!-- Secondary Metrics -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+            <div class="text-sm text-gray-600 mb-1">Net Worth</div>
+            <div class="text-lg font-semibold text-gray-800">{{ currency_symbol() }}{{ number_format($summary['net_worth'], 0) }}</div>
+        </div>
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+            <div class="text-sm text-gray-600 mb-1">Total Savings</div>
+            <div class="text-lg font-semibold text-gray-800">{{ currency_symbol() }}{{ number_format($summary['total_savings'], 0) }}</div>
+        </div>
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+            <div class="text-sm text-gray-600 mb-1">Monthly Bills</div>
+            <div class="text-lg font-semibold text-gray-800">{{ currency_symbol() }}{{ number_format($summary['monthly_bills'], 0) }}</div>
+        </div>
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+            <div class="text-sm text-gray-600 mb-1">Avg Daily Spending</div>
+            <div class="text-lg font-semibold text-gray-800">{{ currency_symbol() }}{{ number_format($summary['avg_daily_spending'], 0) }}</div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Income vs Expenses Chart -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-bar"></i> Income vs Expenses
+            </div>
+            <div class="card-body">
+                <div style="height: 300px; position: relative;">
                     <canvas id="incomeVsExpensesChart"></canvas>
                 </div>
             </div>
         </div>
         
-        <!-- Category Breakdown -->
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Expense Categories</h5>
-                </div>
-                <div class="card-body" style="height: 300px; position: relative;">
+        <!-- Category Breakdown Chart -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-pie"></i> Expense Categories
+            </div>
+            <div class="card-body">
+                <div style="height: 300px; position: relative;">
                     <canvas id="categoryBreakdownChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Monthly Trend -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">6-Month Trend</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="monthlyTrendChart" height="100"></canvas>
-                </div>
+    <!-- Monthly Trend Chart -->
+    <div class="card mb-6">
+        <div class="card-header">
+            <i class="fas fa-chart-line"></i> 6-Month Trend
+        </div>
+        <div class="card-body">
+            <div style="height: 400px; position: relative;">
+                <canvas id="monthlyTrendChart"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Charts Row 2 -->
-    <div class="row mb-4">
-        <!-- Budget Performance -->
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Budget Performance</h5>
-                </div>
-                <div class="card-body">
-                    @if(count($budgetPerformance) > 0)
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Category</th>
-                                        <th class="text-end">Budget</th>
-                                        <th class="text-end">Spent</th>
-                                        <th class="text-end">%</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($budgetPerformance as $budget)
-                                    <tr>
-                                        <td>{{ $budget['category'] }}</td>
-                                        <td class="text-end">{{ currency_symbol() }}{{ number_format($budget['budget'], 2) }}</td>
-                                        <td class="text-end">{{ currency_symbol() }}{{ number_format($budget['spent'], 2) }}</td>
-                                        <td class="text-end">
-                                            <span class="badge {{ $budget['percentage'] > 100 ? 'bg-danger' : ($budget['percentage'] > 80 ? 'bg-warning' : 'bg-success') }}">
-                                                {{ $budget['percentage'] }}%
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @else
-                        <p class="text-muted text-center">No budget data for this period</p>
-                    @endif
-                </div>
-            </div>
+    <!-- Budget Performance -->
+    @if(isset($budgetPerformance) && count($budgetPerformance) > 0)
+    <div class="card mb-6">
+        <div class="card-header">
+            <i class="fas fa-target"></i> Budget Performance
         </div>
-        
-        <!-- Savings Progress -->
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Savings Goals Progress</h5>
-                </div>
-                <div class="card-body">
-                    @if($savingsProgress->count() > 0)
-                        @foreach($savingsProgress as $goal)
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="fw-medium">{{ $goal->name }}</span>
-                                <span class="small text-muted">{{ $goal->progress_percentage }}%</span>
-                            </div>
-                            <div class="progress" style="height: 8px;">
-                                <div class="progress-bar" role="progressbar" 
-                                     style="width: {{ $goal->progress_percentage }}%; background-color: {{ $goal->color }}"
-                                     aria-valuenow="{{ $goal->progress_percentage }}" 
-                                     aria-valuemin="0" 
-                                     aria-valuemax="100"></div>
-                            </div>
-                            <div class="d-flex justify-content-between mt-1">
-                                <small class="text-muted">{{ currency_symbol() }}{{ number_format($goal->current_amount, 2) }}</small>
-                                <small class="text-muted">{{ currency_symbol() }}{{ number_format($goal->target_amount, 2) }}</small>
+        <div class="card-body">
+            <div class="space-y-3">
+                @foreach($budgetPerformance as $category => $data)
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <!-- Category Info -->
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-800 text-lg">{{ $category }}</div>
+                            <div class="text-sm text-gray-600 mt-1">
+                                {{ $data['percentage'] }}% of budget used
                             </div>
                         </div>
-                        @endforeach
-                    @else
-                        <p class="text-muted text-center">No active savings goals</p>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Additional Info -->
-    <div class="row mb-4">
-        <!-- Top Expenses -->
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Top 10 Expenses</h5>
-                </div>
-                <div class="card-body">
-                    @if($topExpenses->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Description</th>
-                                        <th>Category</th>
-                                        <th class="text-end">Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($topExpenses as $expense)
-                                    <tr>
-                                        <td>{{ $expense->transaction_date->format('M d') }}</td>
-                                        <td>{{ Str::limit($expense->description ?: 'N/A', 20) }}</td>
-                                        <td>{{ $expense->category->name }}</td>
-                                        <td class="text-end text-danger">{{ currency_symbol() }}{{ number_format(abs($expense->amount), 2) }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @else
-                        <p class="text-muted text-center">No expenses in this period</p>
-                    @endif
-                </div>
-            </div>
-        </div>
-        
-        <!-- Account Balances -->
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Account Balances</h5>
-                </div>
-                <div class="card-body">
-                    @if($accountBalances->count() > 0)
-                        <div class="account-balances-list">
-                            @foreach($accountBalances as $account)
-                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 {{ !$loop->last ? 'border-bottom' : '' }}">
-                                <div>
-                                    <div class="fw-medium">{{ $account->name }}</div>
-                                    <small class="text-muted">{{ ucfirst($account->type) }}</small>
+                        
+                        <!-- Budget vs Spent -->
+                        <div class="flex flex-col sm:items-end gap-2">
+                            <div class="flex gap-4 text-sm">
+                                <div class="text-center">
+                                    <div class="text-gray-600">Budget</div>
+                                    <div class="font-semibold">{{ currency_symbol() }}{{ number_format($data['budget'], 0) }}</div>
                                 </div>
-                                <div class="text-end">
-                                    <div class="h5 mb-0 {{ $account->balance >= 0 ? 'text-success' : 'text-danger' }}">
-                                        {{ currency_symbol() }}{{ number_format(abs($account->balance), 2) }}
+                                <div class="text-center">
+                                    <div class="text-gray-600">Spent</div>
+                                    <div class="font-semibold {{ $data['spent'] > $data['budget'] ? 'text-red-600' : 'text-green-600' }}">
+                                        {{ currency_symbol() }}{{ number_format($data['spent'], 0) }}
                                     </div>
-                                    @if($account->balance < 0)
-                                        <small class="text-danger">Overdrawn</small>
-                                    @endif
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-gray-600">Remaining</div>
+                                    <div class="font-semibold {{ $data['remaining'] < 0 ? 'text-red-600' : 'text-green-600' }}">
+                                        {{ currency_symbol() }}{{ number_format($data['remaining'], 0) }}
+                                    </div>
                                 </div>
                             </div>
-                            @endforeach
                             
-                            <div class="mt-3 pt-3 border-top">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="fw-bold">Total Net Worth</div>
-                                    <div class="h4 mb-0 {{ $accountBalances->sum('balance') >= 0 ? 'text-primary' : 'text-danger' }}">
-                                        {{ currency_symbol() }}{{ number_format(abs($accountBalances->sum('balance')), 2) }}
-                                    </div>
+                            <!-- Progress Bar -->
+                            <div class="w-full sm:w-64">
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="h-2 rounded-full {{ $data['percentage'] > 100 ? 'bg-red-500' : ($data['percentage'] > 80 ? 'bg-yellow-500' : 'bg-green-500') }}" 
+                                         style="width: {{ min($data['percentage'], 100) }}%"></div>
                                 </div>
                             </div>
                         </div>
-                    @else
-                        <p class="text-muted text-center">No accounts found</p>
-                    @endif
+                    </div>
                 </div>
+                @endforeach
             </div>
         </div>
     </div>
-</div>
-@endsection
+    @endif
 
-@section('scripts')
+
+    <!-- Category Analysis -->
+    @if(isset($categoryBreakdown) && count($categoryBreakdown) > 0)
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-chart-pie"></i> Category Analysis
+        </div>
+        <div class="card-body">
+            <div class="space-y-4">
+                @foreach($categoryBreakdown as $category)
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center" 
+                                 style="background: {{ $category->color }}20; color: {{ $category->color }};">
+                                <i class="fas fa-tag"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-semibold text-gray-800 text-lg">{{ $category->name }}</div>
+                                <div class="text-sm text-gray-600 mt-1">
+                                    {{ currency_symbol() }}{{ number_format($category->total, 0) }} total
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col sm:items-end gap-2">
+                            <div class="text-xl font-bold text-gray-800">
+                                {{ currency_symbol() }}{{ number_format($category->total, 0) }}
+                            </div>
+                            <div class="text-sm text-gray-600">
+                                {{ round(($category->total / $summary['total_expenses']) * 100, 1) }}% of expenses
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+</div>
+
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-// Income vs Expenses Chart
-const incomeVsExpensesCtx = document.getElementById('incomeVsExpensesChart').getContext('2d');
-new Chart(incomeVsExpensesCtx, {
-    type: 'doughnut',
-    data: {
-        labels: ['Income', 'Expenses'],
-        datasets: [{
-            data: [{{ $incomeVsExpenses['income'] }}, {{ $incomeVsExpenses['expenses'] }}],
-            backgroundColor: ['#10B981', '#EF4444'],
-            borderWidth: 0
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    padding: 10,
-                    font: {
-                        size: 12
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Chart.js loaded, initializing charts...');
+    
+    // Income vs Expenses Chart
+    const incomeVsExpensesCtx = document.getElementById('incomeVsExpensesChart');
+    if (incomeVsExpensesCtx) {
+        console.log('Creating income vs expenses chart...');
+        new Chart(incomeVsExpensesCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Income', 'Expenses'],
+                datasets: [{
+                    data: [{{ $summary['total_income'] ?? 0 }}, {{ $summary['total_expenses'] ?? 0 }}],
+                    backgroundColor: ['#10b981', '#ef4444'],
+                    borderColor: ['#059669', '#dc2626'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '{{ currency_symbol() }}' + value.toLocaleString();
+                            }
+                        }
                     }
                 }
             }
-        },
-        layout: {
-            padding: 10
+        });
+    }
+
+    // Category Breakdown Chart
+    const categoryBreakdownCtx = document.getElementById('categoryBreakdownChart');
+    if (categoryBreakdownCtx) {
+        console.log('Creating category breakdown chart...');
+        const categoryData = {!! json_encode(isset($categoryBreakdown) ? $categoryBreakdown : collect()) !!};
+        console.log('Category data:', categoryData);
+        
+        if (categoryData.length > 0) {
+            new Chart(categoryBreakdownCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: categoryData.map(cat => cat.name),
+                    datasets: [{
+                        data: categoryData.map(cat => cat.total),
+                        backgroundColor: categoryData.map(cat => cat.color)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        } else {
+            // Show empty state
+            categoryBreakdownCtx.parentElement.innerHTML = '<div class="text-center py-8 text-gray-500">No expense data available for the selected period</div>';
+        }
+    }
+
+    // Monthly Trend Chart
+    const monthlyTrendCtx = document.getElementById('monthlyTrendChart');
+    if (monthlyTrendCtx) {
+        console.log('Creating monthly trend chart...');
+        const trendData = {!! json_encode(isset($monthlyTrend) ? $monthlyTrend : []) !!};
+        console.log('Monthly trend data:', trendData);
+        
+        if (trendData.length > 0) {
+            new Chart(monthlyTrendCtx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: trendData.map(item => item.month),
+                    datasets: [{
+                        label: 'Income',
+                        data: trendData.map(item => item.income),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Expenses',
+                        data: trendData.map(item => item.expenses),
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '{{ currency_symbol() }}' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            // Show empty state
+            monthlyTrendCtx.parentElement.innerHTML = '<div class="text-center py-8 text-gray-500">No trend data available</div>';
         }
     }
 });
-
-// Category Breakdown Chart
-const categoryBreakdownCtx = document.getElementById('categoryBreakdownChart').getContext('2d');
-new Chart(categoryBreakdownCtx, {
-    type: 'pie',
-    data: {
-        labels: {!! json_encode($categoryBreakdown->pluck('name')) !!},
-        datasets: [{
-            data: {!! json_encode($categoryBreakdown->pluck('total')) !!},
-            backgroundColor: {!! json_encode($categoryBreakdown->pluck('color')) !!},
-            borderWidth: 0
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom',
-            }
-        }
-    }
-});
-
-// Monthly Trend Chart
-const monthlyTrendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
-new Chart(monthlyTrendCtx, {
-    type: 'line',
-    data: {
-        labels: {!! json_encode(collect($monthlyTrend)->pluck('month')) !!},
-        datasets: [{
-            label: 'Income',
-            data: {!! json_encode(collect($monthlyTrend)->pluck('income')) !!},
-            borderColor: '#10B981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            tension: 0.4
-        }, {
-            label: 'Expenses',
-            data: {!! json_encode(collect($monthlyTrend)->pluck('expenses')) !!},
-            borderColor: '#EF4444',
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            tension: 0.4
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'top',
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true
-            }
-        }
-    }
-});
-
 </script>
 @endsection

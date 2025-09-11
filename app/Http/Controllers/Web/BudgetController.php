@@ -127,7 +127,9 @@ class BudgetController extends Controller
             'summary',
             'selectedMonth',
             'monthDate',
-            'availableMonths'
+            'availableMonths',
+            'budgets',
+            'categories'
         ));
     }
     
@@ -173,10 +175,16 @@ class BudgetController extends Controller
             );
         }
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Budget saved successfully',
-        ]);
+        // Check if this is a web request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Budget saved successfully',
+            ]);
+        }
+        
+        return redirect()->route('budget.index')
+            ->with('success', 'Budget saved successfully');
     }
     
     /**
@@ -226,5 +234,90 @@ class BudgetController extends Controller
             'success' => true,
             'message' => 'Budget copied successfully',
         ]);
+    }
+    
+    /**
+     * Show the form for editing a budget.
+     *
+     * @param Budget $budget
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function edit(Budget $budget)
+    {
+        $user = Auth::user();
+        
+        // Verify the budget belongs to the user
+        if ($budget->user_id !== $user->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        return response()->json([
+            'id' => $budget->id,
+            'category_id' => $budget->category_id,
+            'amount' => $budget->amount,
+        ]);
+    }
+    
+    /**
+     * Update the specified budget.
+     *
+     * @param Request $request
+     * @param Budget $budget
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function update(Request $request, Budget $budget)
+    {
+        $user = Auth::user();
+        
+        // Verify the budget belongs to the user
+        if ($budget->user_id !== $user->id) {
+            return redirect()->route('budget.index')
+                ->with('error', 'Unauthorized access');
+        }
+        
+        $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'amount' => 'required|numeric|min:0',
+        ]);
+        
+        // Verify the category belongs to the user
+        $category = Category::where('user_id', $user->id)
+            ->where('id', $request->category_id)
+            ->first();
+        
+        if (!$category) {
+            return redirect()->route('budget.index')
+                ->with('error', 'Invalid category');
+        }
+        
+        $budget->update([
+            'category_id' => $request->category_id,
+            'amount' => $request->amount,
+        ]);
+        
+        return redirect()->route('budget.index')
+            ->with('success', 'Budget updated successfully');
+    }
+    
+    /**
+     * Remove the specified budget.
+     *
+     * @param Budget $budget
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroy(Budget $budget)
+    {
+        $user = Auth::user();
+        
+        // Verify the budget belongs to the user
+        if ($budget->user_id !== $user->id) {
+            return redirect()->route('budget.index')
+                ->with('error', 'Unauthorized access');
+        }
+        
+        $budget->delete();
+        
+        return redirect()->route('budget.index')
+            ->with('success', 'Budget deleted successfully');
     }
 }

@@ -37,9 +37,25 @@ class BillController extends Controller
             ->with('category')
             ->get();
         
-        // Get all bills for management
-        $allBills = Bill::where('user_id', $user->id)
+        // Get paid bills
+        $paidBills = Bill::where('user_id', $user->id)
+            ->where('is_paid', true)
+            ->orderBy('due_date', 'desc')
+            ->with('category')
+            ->limit(10)
+            ->get();
+        
+        // Get recurring bills
+        $recurringBills = Bill::where('user_id', $user->id)
+            ->where('is_recurring', true)
             ->orderBy('due_date')
+            ->with('category')
+            ->get();
+        
+        // Get all bills for management, sorted by due date (urgent first)
+        $allBills = Bill::where('user_id', $user->id)
+            ->orderBy('is_paid') // Unpaid bills first
+            ->orderBy('due_date') // Then by due date
             ->with('category')
             ->paginate(20);
         
@@ -75,8 +91,12 @@ class BillController extends Controller
             'allBills',
             'summary',
             'categories',
-            'accounts'
-        ));
+            'accounts',
+            'paidBills',
+            'recurringBills'
+        ))->with([
+            'totalUpcoming' => $summary['upcoming_count']
+        ]);
     }
     
     /**
@@ -116,11 +136,42 @@ class BillController extends Controller
             'notes' => $request->notes,
         ]);
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Bill added successfully',
-            'bill' => $bill->load('category'),
-        ]);
+        // Check if this is a web request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Bill added successfully',
+                'bill' => $bill->load('category'),
+            ]);
+        }
+        
+        return redirect()->route('bills.index')
+            ->with('success', 'Bill added successfully');
+    }
+    
+    /**
+     * Show the form for editing a bill.
+     *
+     * @param Bill $bill
+     * @return \Illuminate\View\View
+     */
+    public function edit(Bill $bill)
+    {
+        $user = Auth::user();
+        
+        // Verify bill belongs to user
+        if ($bill->user_id !== $user->id) {
+            abort(403);
+        }
+        
+        // Get categories for the form
+        $categories = Category::where('user_id', $user->id)
+            ->where('type', 'expense')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+        
+        return view('bills.edit', compact('bill', 'categories'));
     }
     
     /**
@@ -162,11 +213,17 @@ class BillController extends Controller
             'notes' => $request->notes,
         ]);
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Bill updated successfully',
-            'bill' => $bill->load('category'),
-        ]);
+        // Check if this is a web request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Bill updated successfully',
+                'bill' => $bill->load('category'),
+            ]);
+        }
+        
+        return redirect()->route('bills.index')
+            ->with('success', 'Bill updated successfully');
     }
     
     /**
@@ -184,10 +241,16 @@ class BillController extends Controller
         
         $bill->delete();
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Bill deleted successfully',
-        ]);
+        // Check if this is a web request
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Bill deleted successfully',
+            ]);
+        }
+        
+        return redirect()->route('bills.index')
+            ->with('success', 'Bill deleted successfully');
     }
     
     /**
@@ -195,7 +258,7 @@ class BillController extends Controller
      *
      * @param Request $request
      * @param Bill $bill
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function markPaid(Request $request, Bill $bill)
     {
@@ -204,25 +267,42 @@ class BillController extends Controller
             abort(403);
         }
         
-        $request->validate([
-            'account_id' => 'required|exists:accounts,id',
-            'payment_date' => 'nullable|date',
-        ]);
-        
         $user = Auth::user();
         
+        // Get the first available account if no account_id provided
+        $accountId = $request->get('account_id');
+        if (!$accountId) {
+            $account = Account::where('user_id', $user->id)
+                ->where('is_active', true)
+                ->first();
+            
+            if (!$account) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'error' => 'No account available for payment',
+                    ], 400);
+                }
+                return redirect()->route('bills.index')
+                    ->with('error', 'No account available for payment');
+            }
+            $accountId = $account->id;
+        }
+        
         // Verify account belongs to user
-        $account = Account::where('id', $request->account_id)
+        $account = Account::where('id', $accountId)
             ->where('user_id', $user->id)
             ->firstOrFail();
         
         // Mark bill as paid
-        $bill->update(['is_paid' => true]);
+        $bill->update([
+            'is_paid' => true,
+            'paid_at' => now(),
+        ]);
         
         // Create a transaction for the payment
         $transaction = Transaction::create([
             'user_id' => $user->id,
-            'account_id' => $request->account_id,
+            'account_id' => $accountId,
             'category_id' => $bill->category_id,
             'amount' => -$bill->amount,
             'type' => 'expense',
@@ -251,18 +331,24 @@ class BillController extends Controller
             ]);
         }
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Bill marked as paid',
-            'transaction' => $transaction,
-        ]);
+        // Check if this is a web request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Bill marked as paid',
+                'transaction' => $transaction,
+            ]);
+        }
+        
+        return redirect()->route('bills.index')
+            ->with('success', 'Bill marked as paid');
     }
     
     /**
      * Mark a bill as unpaid.
      *
      * @param Bill $bill
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function markUnpaid(Bill $bill)
     {
@@ -271,12 +357,21 @@ class BillController extends Controller
             abort(403);
         }
         
-        $bill->update(['is_paid' => false]);
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Bill marked as unpaid',
+        $bill->update([
+            'is_paid' => false,
+            'paid_at' => null,
         ]);
+        
+        // Check if this is a web request
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Bill marked as unpaid',
+            ]);
+        }
+        
+        return redirect()->route('bills.index')
+            ->with('success', 'Bill marked as unpaid');
     }
     
     /**

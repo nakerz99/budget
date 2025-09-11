@@ -108,7 +108,35 @@ class TransactionController extends Controller
             'accounts',
             'filters',
             'summary'
-        ));
+        ))->with([
+            'totalIncome' => $summary['total_income'],
+            'totalExpense' => $summary['total_expense'],
+            'netAmount' => $summary['net_amount'],
+            'transactionCount' => $summary['transaction_count']
+        ]);
+    }
+    
+    /**
+     * Show the form for creating a new transaction.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function create()
+    {
+        $user = Auth::user();
+        
+        // Get user's categories and accounts for the form
+        $categories = Category::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+            
+        $accounts = Account::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+        
+        return view('transactions.create', compact('categories', 'accounts'));
     }
     
     /**
@@ -157,11 +185,46 @@ class TransactionController extends Controller
         // Fire transaction created event
         event(new TransactionCreated($transaction));
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Transaction added successfully',
-            'transaction' => $transaction->load(['category', 'account']),
-        ]);
+        // Check if this is a web request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction added successfully',
+                'transaction' => $transaction->load(['category', 'account']),
+            ]);
+        }
+        
+        return redirect()->route('transactions.index')
+            ->with('success', 'Transaction added successfully');
+    }
+    
+    /**
+     * Show the form for editing a transaction.
+     *
+     * @param Transaction $transaction
+     * @return \Illuminate\View\View
+     */
+    public function edit(Transaction $transaction)
+    {
+        $user = Auth::user();
+        
+        // Verify transaction belongs to user
+        if ($transaction->user_id !== $user->id) {
+            abort(403);
+        }
+        
+        // Get user's categories and accounts for the form
+        $categories = Category::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+            
+        $accounts = Account::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+        
+        return view('transactions.edit', compact('transaction', 'categories', 'accounts'));
     }
     
     /**
@@ -217,11 +280,17 @@ class TransactionController extends Controller
         $account->balance += $transaction->amount;
         $account->save();
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Transaction updated successfully',
-            'transaction' => $transaction->load(['category', 'account']),
-        ]);
+        // Check if this is a web request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction updated successfully',
+                'transaction' => $transaction->load(['category', 'account']),
+            ]);
+        }
+        
+        return redirect()->route('transactions.index')
+            ->with('success', 'Transaction updated successfully');
     }
     
     /**
@@ -245,10 +314,16 @@ class TransactionController extends Controller
         // Delete transaction
         $transaction->delete();
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Transaction deleted successfully',
-        ]);
+        // Check if this is a web request
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction deleted successfully',
+            ]);
+        }
+        
+        return redirect()->route('transactions.index')
+            ->with('success', 'Transaction deleted successfully');
     }
     
     /**

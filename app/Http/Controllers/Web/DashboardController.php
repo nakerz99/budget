@@ -14,6 +14,10 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         
+        if (!$user) {
+            return redirect()->route('login');
+        }
+        
         // Get current month data
         $startOfMonth = \Carbon\Carbon::now()->startOfMonth();
         $endOfMonth = \Carbon\Carbon::now()->endOfMonth();
@@ -39,6 +43,13 @@ class DashboardController extends Controller
             ->where('is_completed', false)
             ->count();
         
+        // Savings goals
+        $savingsGoals = \App\Models\SavingsGoal::where('user_id', $user->id)
+            ->where('is_completed', false)
+            ->orderBy('target_date')
+            ->limit(3)
+            ->get();
+        
         // Recent transactions
         $recentTransactions = \App\Models\Transaction::where('user_id', $user->id)
             ->with(['category', 'account'])
@@ -62,6 +73,7 @@ class DashboardController extends Controller
             'monthlyBudget',
             'accountBalance',
             'savingsGoalsCount',
+            'savingsGoals',
             'recentTransactions',
             'upcomingBills'
         ));

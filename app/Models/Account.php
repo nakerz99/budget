@@ -10,7 +10,7 @@ class Account extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'name', 'type', 'balance', 'color', 'is_active',
+        'user_id', 'name', 'type', 'balance', 'color', 'is_active', 'bank_name', 'account_type', 'account_number',
     ];
 
     protected $casts = [
